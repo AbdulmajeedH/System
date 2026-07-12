@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { prisma, withSerializableTx } from "@/lib/db";
+import { withSerializableTx } from "@/lib/db";
 import { Prisma } from "@/generated/prisma/client";
 import {
   ApprovalDecision,

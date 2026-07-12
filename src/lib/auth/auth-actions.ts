@@ -37,7 +37,7 @@ export async function login(_prev: LoginState, formData: FormData): Promise<Logi
   await prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
   await audit({ userId: user.id, action: "auth.login" });
 
-  redirect("/dashboard");
+  redirect("/");
 }
 
 export async function logout(): Promise<void> {

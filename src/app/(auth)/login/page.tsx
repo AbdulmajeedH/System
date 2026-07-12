@@ -7,7 +7,7 @@ export const metadata = { title: t.auth.loginTitle };
 
 export default async function LoginPage() {
   const user = await getCurrentUser();
-  if (user) redirect("/dashboard");
+  if (user) redirect("/");
 
   return (
     <main className="flex min-h-dvh items-center justify-center p-6">

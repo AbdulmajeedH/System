@@ -6,10 +6,28 @@ Internal business management web application for a restaurant, café, and mini-m
 
 ## Stack
 
-- Next.js (App Router) + TypeScript + Tailwind CSS
-- PostgreSQL 16 + Prisma ORM
+- Next.js (App Router) + TypeScript + Tailwind CSS v4
+- PostgreSQL 16 + Prisma 7 (driver adapter)
 - Arabic RTL by default, mobile-first UI
 - Server Actions + Zod validation, custom session auth, role-based access control
+- Vitest (unit + integration tests)
+
+## Phase 1 modules
+
+| Module | Highlights |
+|---|---|
+| Authentication & users | bcrypt + DB sessions, activate/deactivate, password reset, full audit |
+| Daily income | 1–2 minute mobile closing form, auto totals, cash-difference reason, duplicate prevention, review/approve flow, important-product counts |
+| Expenses | Categories, receipts, threshold-based approvals |
+| Purchase invoices | Manual entry with line items and VAT, duplicate detection, approval thresholds (500 / 2000 SAR), warehouse receipt |
+| Inventory | Item master with units & conversions, per-location balances, **immutable movement ledger** (no direct quantity edits), moving-average cost |
+| Stock requests & transfers | Two-sided workflow: request → approve (full/partial) → prepare → deliver → department confirmation with received/damaged/missing |
+| Stock counts | Count sheets with system snapshot, difference values, threshold-routed approval, adjustment posting |
+| Damage/waste/expiry | Photo evidence, estimated cost, approvals, ledger write-off |
+| Attendance | Check-in/out and breaks with a state machine, warnings, manager report |
+| Approvals | Configurable rule engine (type + amount band + department + role) with unified inbox |
+| Dashboard | Role-scoped stats, 14-day income trend, income by department |
+| Audit log | Every sensitive action recorded; viewer for the owner |
 
 ## Local setup
 
@@ -38,7 +56,29 @@ The app runs at http://localhost:3000.
 
 ### Seeded accounts
 
-See `prisma/seed.ts`. Default password for all seeded users is documented there (change in production).
+Default password for **all** seeded users: `Passw0rd!` (change in any real deployment).
+
+| Email | Role |
+|---|---|
+| `owner@rbms.local` | Owner — everything |
+| `gm@rbms.local` | Operations manager — reviews & approvals |
+| `restaurant@rbms.local` | Restaurant manager |
+| `cafe@rbms.local` | Café manager |
+| `minimarket@rbms.local` | Mini-market manager |
+| `purchasing@rbms.local` | Purchasing officer |
+| `warehouse@rbms.local` | Warehouse manager |
+| `employee@rbms.local` | Employee (attendance only) |
+
+## Tests
+
+```bash
+# one-time: create the test database (matches DATABASE_URL_TEST in .env.example)
+createdb rbms_test   # or: docker compose exec postgres createdb -U rbms rbms_test
+
+npm test
+```
+
+Unit tests cover the money calculations, approval-rule matching, unit conversion / moving-average cost, and the attendance state machine. Integration tests run the inventory ledger and approval workflows against the real test database, including the balance-equals-sum-of-movements invariant.
 
 ## Scripts
 
@@ -47,16 +87,34 @@ See `prisma/seed.ts`. Default password for all seeded users is documented there 
 | `npm run dev` | Development server |
 | `npm run build` | Production build |
 | `npm run lint` | ESLint |
+| `npm test` | Vitest (integration tests need PostgreSQL running) |
 | `npx prisma migrate dev` | Apply/create migrations |
 | `npx prisma db seed` | Seed data |
-| `npm test` | Run tests |
 
 ## Project structure
 
 ```
-prisma/          Prisma schema, migrations, seed
-src/app/         Next.js App Router pages (RTL Arabic)
-src/lib/         auth, db, i18n, domain services, validations
-src/components/  UI kit and layout components
-uploads/         local file storage (dev only, gitignored)
+prisma/            Prisma schema, migrations, seed
+src/app/(auth)/    login
+src/app/(app)/     dashboard, income, expenses, invoices, suppliers,
+                   inventory, stock-requests, stock-counts, damages,
+                   attendance, approvals, users, audit-log
+src/app/api/files/ authenticated attachment serving
+src/lib/auth/      sessions, password hashing, RBAC (permissions.ts)
+src/lib/services/  inventory ledger, approvals engine, income math,
+                   attendance state machine, audit writer, storage
+src/lib/i18n/ar.ts typed Arabic dictionary (all UI strings)
+src/components/    UI kit, layout (RTL sidebar + mobile bottom nav)
+tests/             Vitest unit + integration suites
+uploads/           local file storage (dev only, gitignored)
 ```
+
+## Architecture rules
+
+- All stock changes go through `InventoryMovement` transactions — never edit balances directly.
+- Money is `Decimal(12,2)`, quantities `Decimal(12,3)` — never floats.
+- Every sensitive mutation writes an `AuditLog` entry.
+- Department-scoped users can never read other departments' financial data (enforced in queries).
+- Financial/inventory records are soft-deleted (`isActive`/`deletedAt`), never hard-deleted.
+- File storage is behind a provider interface (`src/lib/services/storage`) — local disk in dev, S3-compatible adapter slot for production.
+- Attendance and (future) invoice-OCR are behind provider abstractions so Telegram/WhatsApp/QR and AI extraction can plug in during Phase 2/3.

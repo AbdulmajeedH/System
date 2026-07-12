@@ -116,3 +116,8 @@ export function departmentScope(user: SessionUser): string | null {
   if (user.role === "OWNER" || user.role === "GENERAL_MANAGER") return null;
   return user.departmentId;
 }
+
+/** Landing page after login: employees go straight to attendance. */
+export function homeFor(user: SessionUser): string {
+  return can(user, "dashboard.view") ? "/dashboard" : "/attendance";
+}
