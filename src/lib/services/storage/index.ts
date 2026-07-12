@@ -1,5 +1,6 @@
 import "server-only";
 import { LocalStorageProvider } from "./local";
+import { S3StorageProvider } from "./s3";
 
 export type StoredFile = {
   buffer: Buffer;
@@ -21,7 +22,10 @@ let provider: StorageProvider | null = null;
 
 export function getStorage(): StorageProvider {
   if (!provider) {
-    provider = new LocalStorageProvider(process.env.STORAGE_DIR || "uploads");
+    provider =
+      process.env.STORAGE_DRIVER === "s3"
+        ? new S3StorageProvider()
+        : new LocalStorageProvider(process.env.STORAGE_DIR || "uploads");
   }
   return provider;
 }

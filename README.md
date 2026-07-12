@@ -109,6 +109,30 @@ tests/             Vitest unit + integration suites
 uploads/           local file storage (dev only, gitignored)
 ```
 
+## Deploying to Vercel
+
+Vercel can't run Docker or keep files on disk, so you need a hosted database and object storage:
+
+1. **Database** — create a free PostgreSQL database on [Neon](https://neon.tech) (also available directly from the Vercel dashboard under **Storage → Create Database → Neon**). Copy the **pooled** connection string.
+2. **File storage** — create an S3-compatible bucket (Cloudflare R2 has a free tier, or AWS S3 / Supabase Storage) and an access key for it.
+3. **Import the repo** at [vercel.com/new](https://vercel.com/new), and under *Build and Output Settings* set the **Build Command** to:
+   ```
+   npm run vercel-build
+   ```
+   (runs `prisma generate && prisma migrate deploy && next build`, so every deploy applies pending migrations.)
+4. **Environment variables** (Project → Settings → Environment Variables):
+   | Variable | Value |
+   |---|---|
+   | `DATABASE_URL` | the Neon pooled connection string |
+   | `AUTH_SECRET` | output of `openssl rand -hex 32` |
+   | `STORAGE_DRIVER` | `s3` |
+   | `S3_BUCKET` / `S3_REGION` / `S3_ENDPOINT` / `S3_ACCESS_KEY_ID` / `S3_SECRET_ACCESS_KEY` | from step 2 (`S3_REGION=auto` and set `S3_ENDPOINT` for R2; omit `S3_ENDPOINT` for AWS) |
+5. **Seed once** from your machine against the production database:
+   ```bash
+   DATABASE_URL="<neon-connection-string>" npx prisma db seed
+   ```
+6. Deploy, then log in with the seeded owner account and **immediately change the seeded passwords** from the users screen.
+
 ## Architecture rules
 
 - All stock changes go through `InventoryMovement` transactions — never edit balances directly.
