@@ -42,3 +42,6 @@ next-env.d.ts
 
 # local file storage for attachments
 /uploads
+
+# prisma generated client
+/src/generated
