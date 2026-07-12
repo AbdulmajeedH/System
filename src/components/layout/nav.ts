@@ -20,6 +20,7 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/stock-counts", label: t.nav.stockCounts, icon: "📊", permissions: ["count.perform", "count.approve"] },
   { href: "/damages", label: t.nav.damages, icon: "⚠️", permissions: ["damage.record", "damage.approve"] },
   { href: "/approvals", label: t.nav.approvals, icon: "✅", permissions: ["approvals.act"] },
+  { href: "/attendance", label: t.nav.attendance, icon: "⏰", permissions: ["attendance.own"] },
   { href: "/suppliers", label: t.nav.suppliers, icon: "🚚", permissions: ["supplier.manage"] },
   { href: "/users", label: t.nav.users, icon: "👥", permissions: ["users.manage"] },
   { href: "/audit-log", label: t.nav.auditLog, icon: "📋", permissions: ["audit.view"] },
