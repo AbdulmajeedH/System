@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: rbms-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: rbms
+      POSTGRES_PASSWORD: rbms_dev_password
+      POSTGRES_DB: rbms
+    ports:
+      - "5432:5432"
+    volumes:
+      - rbms_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rbms -d rbms"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  rbms_pgdata:
