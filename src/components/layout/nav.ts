@@ -14,6 +14,9 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/dashboard", label: t.nav.dashboard, icon: "🏠", permissions: ["dashboard.view"] },
   { href: "/income", label: t.nav.income, icon: "💰", permissions: ["income.submit", "income.viewAll"] },
   { href: "/expenses", label: t.nav.expenses, icon: "🧾", permissions: ["expense.submit", "expense.review"] },
+  { href: "/invoices", label: t.nav.invoices, icon: "📄", permissions: ["invoice.manage", "invoice.approve", "warehouse.manage"] },
+  { href: "/inventory", label: t.nav.inventory, icon: "📦", permissions: ["inventory.view"] },
+  { href: "/suppliers", label: t.nav.suppliers, icon: "🚚", permissions: ["supplier.manage"] },
   { href: "/users", label: t.nav.users, icon: "👥", permissions: ["users.manage"] },
   { href: "/audit-log", label: t.nav.auditLog, icon: "📋", permissions: ["audit.view"] },
 ];
