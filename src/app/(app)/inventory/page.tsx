@@ -22,7 +22,8 @@ export default async function InventoryPage({
     where: viewAll ? { isActive: true } : { departmentId: user.departmentId ?? "-" },
     orderBy: { code: "asc" },
   });
-  // Department users are always pinned to their own location.
+  // Department users are always pinned to their own location; if they have
+  // none, they must see no balances at all — never the global totals.
   const selectedLocation = viewAll
     ? locations.find((l) => l.id === location) ?? null
     : locations[0] ?? null;
@@ -34,7 +35,11 @@ export default async function InventoryPage({
     },
     include: {
       baseUnit: true,
-      balances: selectedLocation ? { where: { locationId: selectedLocation.id } } : true,
+      balances: selectedLocation
+        ? { where: { locationId: selectedLocation.id } }
+        : viewAll
+          ? true
+          : { where: { locationId: "-" } },
     },
     orderBy: { nameAr: "asc" },
     take: 200,

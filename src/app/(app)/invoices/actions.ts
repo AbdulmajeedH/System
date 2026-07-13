@@ -113,9 +113,16 @@ export async function saveInvoice(
         });
       }
 
+      const supplier = await tx.supplier.findFirst({
+        where: { id: data.supplierId, isActive: true },
+        select: { id: true },
+      });
+      if (!supplier) throw new Error("inactive-selection");
+
       // Purchase unit is taken from the item master at entry time.
+      // Only ACTIVE items may appear on new invoices.
       const items = await tx.inventoryItem.findMany({
-        where: { id: { in: computedLines.map((l) => l.itemId) } },
+        where: { id: { in: computedLines.map((l) => l.itemId) }, isActive: true },
         select: { id: true, purchaseUnitId: true },
       });
       const unitByItem = new Map(items.map((i) => [i.id, i.purchaseUnitId]));
@@ -159,7 +166,9 @@ export async function saveInvoice(
     const message = (error as Error).message;
     if (message === "duplicate") return { fieldErrors: { invoiceNumber: t.invoices.duplicateNumber } };
     if (message === "not-editable") return { error: t.income.onlyDraftEditable };
-    if (message === "bad-item") return { error: t.common.error };
+    if (message === "bad-item" || message === "inactive-selection") {
+      return { error: t.common.inactiveSelection };
+    }
     throw error;
   }
 

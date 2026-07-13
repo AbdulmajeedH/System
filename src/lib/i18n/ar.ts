@@ -42,6 +42,7 @@ export const ar = {
     confirm: "تأكيد",
     error: "حدث خطأ، حاول مرة أخرى",
     savedSuccessfully: "تم الحفظ بنجاح",
+    inactiveSelection: "أحد العناصر المختارة غير نشط أو غير موجود",
     department: "القسم",
     employee: "الموظف",
     user: "المستخدم",
@@ -85,6 +86,7 @@ export const ar = {
     login: "دخول",
     invalidCredentials: "البريد الإلكتروني أو كلمة المرور غير صحيحة",
     accountDisabled: "هذا الحساب موقوف، تواصل مع الإدارة",
+    tooManyAttempts: "محاولات كثيرة خاطئة، حاول مرة أخرى بعد ١٥ دقيقة",
     welcome: "مرحباً",
   },
   ui: {

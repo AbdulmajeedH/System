@@ -49,6 +49,14 @@ export async function createStockRequest(_prev: FormState, formData: FormData): 
     return { error: t.income.cannotSubmitForOtherDept };
   }
 
+  // Only active items may be requested.
+  const activeItems = await prisma.inventoryItem.count({
+    where: { id: { in: data.lines.map((l) => l.itemId) }, isActive: true },
+  });
+  if (activeItems !== new Set(data.lines.map((l) => l.itemId)).size) {
+    return { error: t.common.inactiveSelection };
+  }
+
   const request = await prisma.stockRequest.create({
     data: {
       departmentId: data.departmentId,
