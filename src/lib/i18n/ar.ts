@@ -88,7 +88,7 @@ export const ar = {
     welcome: "مرحباً",
   },
   ui: {
-    brandMark: "RB",
+    brandMark: "د",
     mainNavigation: "التنقل الرئيسي",
     mobileNavigation: "تنقل الجوال",
     emptyTitle: "لا توجد بيانات",
@@ -96,6 +96,7 @@ export const ar = {
     purchasing: "مشتريات",
     reports: "تقارير",
     required: "مطلوب",
+    operationsLedger: "دفتر العمليات",
   },
   roles: {
     OWNER: "مالك",
@@ -161,6 +162,8 @@ export const ar = {
   },
   dashboard: {
     title: "لوحة المعلومات",
+    operationsLedger: "دفتر اليوم",
+    ledgerSubtitle: "قراءة تشغيلية سريعة للدخل، المخزون، الطلبات، والحضور",
     welcome: "مرحباً",
     todayIncome: "دخل اليوم",
     todayExpenses: "مصروفات اليوم",

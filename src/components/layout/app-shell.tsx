@@ -19,7 +19,8 @@ export function AppShell({ user, children }: { user: SessionUser; children: Reac
         <div className="border-b border-border p-8">
           <div className="mb-6 flex size-12 items-center justify-center rounded-full bg-primary text-lg font-bold text-primary-foreground">{t.ui.brandMark}</div>
           <p className="text-2xl font-bold leading-8">{t.app.name}</p>
-          <p className="mt-2 text-sm leading-5 text-muted">{t.app.tagline}</p>
+          <p className="mt-2 text-sm leading-5 text-muted">{t.ui.operationsLedger}</p>
+          <div className="mt-6 h-2 w-28 rounded-full bg-primary" aria-hidden />
         </div>
         <nav className="flex-1 space-y-1 overflow-y-auto p-3" aria-label={t.ui.mainNavigation}>
           {items.map((item) => (
@@ -44,7 +45,7 @@ export function AppShell({ user, children }: { user: SessionUser; children: Reac
         <header className="sticky top-0 z-20 border-b border-border bg-card px-4 py-4 sm:px-8">
           <div className="mx-auto flex max-w-[1200px] items-center justify-between gap-3">
             <div className="min-w-0">
-              <p className="truncate text-base font-medium leading-5">{t.app.name}</p>
+              <p className="truncate text-base font-medium leading-5">{t.ui.operationsLedger}</p>
               <p className="truncate text-xs text-muted">{user.departmentName ? user.departmentName : t.roles[user.role]}</p>
             </div>
             <div className="flex items-center gap-2">

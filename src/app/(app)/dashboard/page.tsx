@@ -12,7 +12,7 @@ import {
 import { roleSatisfies } from "@/lib/services/approvals";
 import { t } from "@/lib/i18n/ar";
 import { formatMoney, toDateInputValue } from "@/lib/utils/format";
-import { Card, PageHeader } from "@/components/ui";
+import { Card } from "@/components/ui";
 import { ColumnChart, HBarChart, StatTile } from "@/components/ui/charts";
 
 export const metadata = { title: t.dashboard.title };
@@ -190,17 +190,23 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title={t.dashboard.title}
-        eyebrow={todayStr}
-        subtitle={`${t.dashboard.welcome}، ${user.name} · ${t.roles[user.role]}${user.departmentName ? ` — ${user.departmentName}` : ""}`}
-      />
-
-      <div className="flex flex-wrap gap-2 rounded-full bg-canvas-soft p-1">
-        <span className="rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">{t.dashboard.today}</span>
-        <span className="rounded-full px-4 py-2 text-sm font-medium text-muted">{t.dashboard.thisMonth}</span>
-        <span className="rounded-full px-4 py-2 text-sm font-medium text-muted">{user.departmentName ?? t.dashboard.allDepartments}</span>
-      </div>
+      <section className="overflow-hidden rounded-2xl bg-primary text-primary-foreground">
+        <div className="grid gap-6 p-6 sm:p-8 lg:grid-cols-[1fr_auto] lg:items-end">
+          <div className="space-y-3">
+            <p className="text-sm font-medium text-white/70">{todayStr}</p>
+            <h1 className="text-4xl font-bold leading-[44px] sm:text-[52px] sm:leading-[64px]">{t.dashboard.operationsLedger}</h1>
+            <p className="max-w-2xl text-base leading-6 text-white/70">
+              {t.dashboard.ledgerSubtitle} · {user.name} · {t.roles[user.role]}
+              {user.departmentName ? ` — ${user.departmentName}` : ""}
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2 rounded-full bg-white/10 p-1">
+            <span className="rounded-full bg-white px-4 py-2 text-sm font-medium text-primary">{t.dashboard.today}</span>
+            <span className="rounded-full px-4 py-2 text-sm font-medium text-white/70">{t.dashboard.thisMonth}</span>
+            <span className="rounded-full px-4 py-2 text-sm font-medium text-white/70">{user.departmentName ?? t.dashboard.allDepartments}</span>
+          </div>
+        </div>
+      </section>
 
       {viewFinancials ? (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
