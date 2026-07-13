@@ -189,15 +189,21 @@ export default async function DashboardPage() {
   const hasTrend = trendData.some((d) => d.value > 0);
 
   return (
-    <div className="space-y-4">
-      <PageHeader title={t.dashboard.title} />
-      <p className="text-sm text-muted -mt-2">
-        {t.dashboard.welcome}، {user.name} · {t.roles[user.role]}
-        {user.departmentName ? ` — ${user.departmentName}` : ""}
-      </p>
+    <div className="space-y-6">
+      <PageHeader
+        title={t.dashboard.title}
+        eyebrow={todayStr}
+        subtitle={`${t.dashboard.welcome}، ${user.name} · ${t.roles[user.role]}${user.departmentName ? ` — ${user.departmentName}` : ""}`}
+      />
+
+      <div className="flex flex-wrap gap-2 rounded-full bg-canvas-soft p-1">
+        <span className="rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">{t.dashboard.today}</span>
+        <span className="rounded-full px-4 py-2 text-sm font-medium text-muted">{t.dashboard.thisMonth}</span>
+        <span className="rounded-full px-4 py-2 text-sm font-medium text-muted">{user.departmentName ?? t.dashboard.allDepartments}</span>
+      </div>
 
       {viewFinancials ? (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <StatTile label={t.dashboard.todayIncome} value={money(dec(sums.totalIncome))} suffix={t.app.currency} />
           <StatTile label={t.dashboard.todayExpenses} value={money(dec(todayExpenses._sum.amount))} suffix={t.app.currency} />
           <StatTile
@@ -222,7 +228,7 @@ export default async function DashboardPage() {
         </div>
       ) : null}
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {can(user, "inventory.view") ? (
           <>
             <StatTile label={t.dashboard.inventoryValue} value={money(inventoryValue)} suffix={t.app.currency} />
@@ -257,18 +263,18 @@ export default async function DashboardPage() {
       </div>
 
       {viewFinancials ? (
-        <div className="grid lg:grid-cols-2 gap-4">
+        <div className="grid gap-4 lg:grid-cols-2">
           <Card>
-            <h2 className="font-bold mb-3">{t.dashboard.incomeTrend}</h2>
+            <h2 className="mb-4 text-lg font-black">{t.dashboard.incomeTrend}</h2>
             {hasTrend ? (
               <ColumnChart data={trendData} />
             ) : (
-              <p className="text-sm text-muted">{t.dashboard.noData}</p>
+              <p className="rounded-2xl bg-canvas-soft p-8 text-center text-sm text-muted">{t.dashboard.noData}</p>
             )}
           </Card>
           {byDeptData.length > 0 ? (
             <Card>
-              <h2 className="font-bold mb-3">{t.dashboard.incomeByDepartment}</h2>
+              <h2 className="mb-4 text-lg font-black">{t.dashboard.incomeByDepartment}</h2>
               <HBarChart data={byDeptData} />
             </Card>
           ) : null}

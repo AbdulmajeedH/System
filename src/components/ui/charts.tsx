@@ -22,7 +22,7 @@ export function HBarChart({
               {formatMoney(d.value)} {t.app.currency}
             </span>
           </div>
-          <div className="h-2.5 rounded-full bg-background overflow-hidden">
+          <div className="h-3 overflow-hidden rounded-full bg-canvas-soft">
             <div
               className="h-full rounded-full bg-primary"
               style={{ width: `${(d.value / max) * 100}%` }}
@@ -41,11 +41,11 @@ export function ColumnChart({
 }) {
   const max = Math.max(...data.map((d) => d.value), 1);
   return (
-    <div className="flex items-end gap-1 h-36">
+    <div className="flex h-44 items-end gap-1.5 rounded-2xl bg-canvas-soft p-4">
       {data.map((d, i) => (
         <div key={i} className="flex-1 flex flex-col items-center gap-1 min-w-0">
           <div
-            className="w-full rounded-t bg-primary/80 hover:bg-primary transition-colors"
+            className="w-full rounded-t-xl bg-primary/80 transition-colors hover:bg-primary"
             style={{ height: `${(d.value / max) * 100}%` }}
             title={`${d.label}: ${formatMoney(d.value)} ${t.app.currency}`}
           />
@@ -78,9 +78,9 @@ export function StatTile({
           ? "text-success"
           : "";
   return (
-    <div className="rounded-2xl bg-card border border-border p-4">
-      <p className="text-xs text-muted mb-1">{label}</p>
-      <p className={`text-lg font-bold dir-ltr text-start ${toneClass}`}>
+    <div className="rounded-2xl border border-border bg-card p-6 transition-colors hover:bg-canvas-softer">
+      <p className="mb-2 text-sm font-normal leading-5 text-muted">{label}</p>
+      <p className={`dir-ltr text-start text-2xl font-bold leading-8 ${toneClass}`}>
         {value}
         {suffix ? <span className="text-xs font-normal"> {suffix}</span> : null}
       </p>
