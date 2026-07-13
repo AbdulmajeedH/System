@@ -123,13 +123,14 @@ Vercel can't run Docker or keep files on disk, so you need a hosted database and
 4. **Environment variables** (Project → Settings → Environment Variables):
    | Variable | Value |
    |---|---|
-   | `DATABASE_URL` | the Neon pooled connection string |
+   | `DATABASE_URL` | the Neon **pooled** connection string (used by the running app) |
+   | `DIRECT_DATABASE_URL` | the Neon **direct/unpooled** connection string (used by `migrate deploy` during the build) |
    | `AUTH_SECRET` | output of `openssl rand -hex 32` |
    | `STORAGE_DRIVER` | `s3` |
    | `S3_BUCKET` / `S3_REGION` / `S3_ENDPOINT` / `S3_ACCESS_KEY_ID` / `S3_SECRET_ACCESS_KEY` | from step 2 (`S3_REGION=auto` and set `S3_ENDPOINT` for R2; omit `S3_ENDPOINT` for AWS) |
-5. **Seed once** from your machine against the production database:
+5. **Seed once** from your machine against the production database (use the direct/unpooled string):
    ```bash
-   DATABASE_URL="<neon-connection-string>" npx prisma db seed
+   DATABASE_URL="<neon-direct-connection-string>" npx prisma db seed
    ```
 6. Deploy, then log in with the seeded owner account and **immediately change the seeded passwords** from the users screen.
 
