@@ -7,10 +7,12 @@ import { Prisma } from "@/generated/prisma/client";
 import {
   ApprovalDecision,
   ApprovalTransactionType,
+  AttachmentEntityType,
   InvoiceStatus,
   MovementType,
   PaymentMethod,
 } from "@/generated/prisma/enums";
+import { AttachmentError, saveAttachments } from "@/lib/services/attachments";
 import { actionPermission } from "@/lib/auth/guards";
 import { audit } from "@/lib/services/audit";
 import {
@@ -18,7 +20,12 @@ import {
   createApprovalRequest,
   decideApproval,
 } from "@/lib/services/approvals";
-import { movingAverageCost, postMovement, toBaseQty } from "@/lib/services/inventory";
+import {
+  InsufficientStockError,
+  movingAverageCost,
+  postMovement,
+  toBaseQty,
+} from "@/lib/services/inventory";
 import { invoiceFormSchema } from "@/lib/validations/inventory";
 import { fieldErrorsFromZod, unknownError, type FormState } from "@/lib/utils/action-state";
 import { t } from "@/lib/i18n/ar";
@@ -172,6 +179,14 @@ export async function saveInvoice(
     throw error;
   }
 
+  const files = formData.getAll("attachments").filter((f): f is File => f instanceof File);
+  try {
+    await saveAttachments(files, AttachmentEntityType.PURCHASE_INVOICE, savedId, user.id);
+  } catch (error) {
+    if (error instanceof AttachmentError) return { error: error.message };
+    throw error;
+  }
+
   await audit({
     userId: user.id,
     action: asDraft ? "invoice.save_draft" : "invoice.submit",
@@ -235,6 +250,80 @@ export async function decideInvoice(
   revalidatePath("/invoices");
   revalidatePath(`/invoices/${invoiceId}`);
   revalidatePath("/approvals");
+  return { success: true };
+}
+
+/**
+ * Returns quantities from a RECEIVED invoice back to the supplier: posts
+ * SUPPLIER_RETURN ledger movements out of the main warehouse. Quantities
+ * are entered in purchase units and converted to base units, capped at the
+ * originally received quantity per line.
+ */
+export async function returnToSupplier(
+  invoiceId: string,
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const user = await actionPermission("warehouse.manage");
+
+  const reason = String(formData.get("reason") ?? "").trim();
+  if (!reason) return { fieldErrors: { reason: t.common.required } };
+
+  const wanted = new Map<string, Prisma.Decimal>();
+  for (const [key, value] of formData.entries()) {
+    if (!key.startsWith("return_") || typeof value !== "string") continue;
+    const raw = value.trim();
+    if (!raw || !/^\d{1,10}(\.\d{1,3})?$/.test(raw) || Number(raw) <= 0) continue;
+    wanted.set(key.slice("return_".length), new Decimal(raw));
+  }
+  if (wanted.size === 0) return { error: t.supplierReturns.nothingToReturn };
+
+  try {
+    await withSerializableTx(async (tx) => {
+      const invoice = await tx.purchaseInvoice.findUnique({
+        where: { id: invoiceId },
+        include: { items: { include: { item: true } } },
+      });
+      if (!invoice || invoice.status !== InvoiceStatus.RECEIVED) throw new Error("bad-status");
+
+      const warehouse = await tx.inventoryLocation.findUnique({
+        where: { code: "MAIN_WAREHOUSE" },
+      });
+      if (!warehouse) throw new Error("no-warehouse");
+
+      for (const line of invoice.items) {
+        const returnQty = wanted.get(line.itemId);
+        if (!returnQty) continue;
+        if (returnQty.gt(line.quantity)) throw new Error("too-much");
+        await postMovement(tx, {
+          itemId: line.itemId,
+          quantity: toBaseQty(returnQty, line.item.conversionFactor),
+          type: MovementType.SUPPLIER_RETURN,
+          sourceLocationId: warehouse.id,
+          refType: "PurchaseInvoice",
+          refId: invoice.id,
+          userId: user.id,
+          reason,
+        });
+      }
+    });
+  } catch (error) {
+    if (error instanceof InsufficientStockError) {
+      return { error: t.stockRequests.insufficientStock };
+    }
+    return unknownError();
+  }
+
+  await audit({
+    userId: user.id,
+    action: "invoice.supplier_return",
+    entityType: "PurchaseInvoice",
+    entityId: invoiceId,
+    metadata: { reason, items: Object.fromEntries([...wanted].map(([k, v]) => [k, v.toString()])) },
+  });
+
+  revalidatePath(`/invoices/${invoiceId}`);
+  revalidatePath("/inventory");
   return { success: true };
 }
 

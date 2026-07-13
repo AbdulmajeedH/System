@@ -203,6 +203,9 @@ export function ReceiptPanel({
             </div>
           </div>
         ))}
+        <FormField label={t.transfers.deliveryEvidence}>
+          <Input name="attachments" type="file" accept="image/*,application/pdf" multiple />
+        </FormField>
         <FormField label={t.stockRequests.receiptNotes}>
           <Textarea name="receiptNotes" />
         </FormField>

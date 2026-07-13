@@ -30,9 +30,9 @@ export async function saveAttachments(
   entityType: AttachmentEntityType,
   entityId: string,
   uploadedById: string,
-): Promise<number> {
+): Promise<string[]> {
   const storage = getStorage();
-  let saved = 0;
+  const savedKeys: string[] = [];
 
   for (const file of files) {
     if (!file || file.size === 0) continue;
@@ -71,7 +71,7 @@ export async function saveAttachments(
       await storage.delete(key).catch(() => {});
       throw error;
     }
-    saved++;
+    savedKeys.push(key);
   }
-  return saved;
+  return savedKeys;
 }

@@ -133,6 +133,9 @@ export function CountForm({
             {formatMoney(totalDiffValue)} {t.app.currency}
           </span>
         </div>
+        <FormField label={t.common.attachments}>
+          <Input name="attachments" type="file" accept="image/*,application/pdf" multiple />
+        </FormField>
         <FormField label={t.common.notes}>
           <Textarea name="notes" />
         </FormField>

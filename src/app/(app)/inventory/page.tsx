@@ -57,7 +57,10 @@ export default async function InventoryPage({
         title={t.inventory.title}
         action={
           can(user, "inventory.manageItems") ? (
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
+              <Link href="/inventory/adjustments">
+                <Button variant="secondary">{t.adjustments.title}</Button>
+              </Link>
               <Link href="/inventory/categories">
                 <Button variant="secondary">{t.inventory.categories}</Button>
               </Link>
