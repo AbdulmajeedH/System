@@ -24,6 +24,7 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/attendance", label: t.nav.attendance, icon: "attendance", permissions: ["attendance.own"] },
   { href: "/suppliers", label: t.nav.suppliers, icon: "suppliers", permissions: ["supplier.manage"] },
   { href: "/users", label: t.nav.users, icon: "users", permissions: ["users.manage"] },
+  { href: "/reports", label: t.nav.reports, icon: "reports", permissions: ["reports.view"] },
   { href: "/audit-log", label: t.nav.auditLog, icon: "auditLog", permissions: ["audit.view"] },
   { href: "/settings", label: t.nav.settings, icon: "settings", permissions: ["settings.manage"] },
 ];

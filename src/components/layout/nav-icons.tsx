@@ -5,6 +5,7 @@ import {
   Boxes,
   CalendarClock,
   ClipboardList,
+  FileSpreadsheet,
   FileText,
   LayoutDashboard,
   ListChecks,
@@ -38,4 +39,5 @@ export const NAV_ICONS: Record<string, LucideIcon> = {
   tasks: ListChecks,
   settings: Settings,
   transfersNav: ArrowLeftRight,
+  reports: FileSpreadsheet,
 };
