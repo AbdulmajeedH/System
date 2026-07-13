@@ -14,8 +14,8 @@ function cx(...classes: Array<string | false | null | undefined>): string {
 type ButtonVariant = "primary" | "secondary" | "subtle" | "danger" | "ghost";
 
 const buttonVariants: Record<ButtonVariant, string> = {
-  primary: "bg-primary text-primary-foreground hover:bg-primary-hover active:bg-primary-hover",
-  secondary: "bg-card text-foreground ring-1 ring-inset ring-border hover:bg-surface-pressed active:bg-surface-pressed",
+  primary: "bg-primary text-primary-foreground shadow-[0_10px_24px_rgba(0,0,0,0.16)] hover:bg-primary-hover active:bg-primary-hover",
+  secondary: "bg-card text-foreground shadow-sm ring-1 ring-inset ring-border hover:bg-canvas-softer active:bg-surface-pressed",
   subtle: "bg-canvas-soft text-foreground hover:bg-surface-pressed active:bg-surface-pressed",
   danger: "bg-danger text-white hover:bg-red-700 active:bg-red-800",
   ghost: "text-foreground hover:bg-canvas-soft active:bg-surface-pressed",
@@ -29,7 +29,7 @@ export function Button({
   return (
     <button
       className={cx(
-        "inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-5 py-3 text-base font-medium leading-5",
+        "inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-5 py-3 text-base font-bold leading-5",
         "transition-colors disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/20",
         buttonVariants[variant],
         className,
@@ -40,7 +40,7 @@ export function Button({
 }
 
 const controlClass =
-  "w-full rounded-lg border-0 bg-canvas-soft px-4 py-4 text-base leading-6 text-foreground min-h-14 " +
+  "w-full rounded-2xl border-0 bg-canvas-soft px-4 py-4 text-base leading-6 text-foreground min-h-14 " +
   "placeholder:text-muted transition-colors focus:outline-none focus:ring-4 focus:ring-primary/15 focus:bg-canvas-softer " +
   "disabled:opacity-60 disabled:bg-surface-pressed";
 
@@ -88,7 +88,7 @@ export function FormField({
 
 export function Card({ className, children }: { className?: string; children: ReactNode }) {
   return (
-    <div className={cx("rounded-2xl border border-border bg-card p-6", className)}>
+    <div className={cx("rounded-[1.5rem] border border-border bg-card p-6 shadow-[0_16px_40px_rgba(0,0,0,0.06)]", className)}>
       {children}
     </div>
   );
@@ -119,7 +119,7 @@ export function PageHeader({
 
 export function EmptyState({ message, title = t.ui.emptyTitle }: { message: string; title?: string }) {
   return (
-    <div className="rounded-2xl bg-canvas-soft px-8 py-12 text-center">
+    <div className="rounded-[1.5rem] bg-canvas-soft px-8 py-12 text-center shadow-inner">
       <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-full bg-white text-xl" aria-hidden>•</div>
       <h2 className="font-bold text-foreground">{title}</h2>
       <p className="mt-1 text-sm leading-6 text-muted">{message}</p>

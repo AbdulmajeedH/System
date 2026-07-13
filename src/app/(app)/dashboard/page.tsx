@@ -190,26 +190,26 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <section className="overflow-hidden rounded-2xl bg-primary text-primary-foreground">
-        <div className="grid gap-6 p-6 sm:p-8 lg:grid-cols-[1fr_auto] lg:items-end">
+      <section className="overflow-hidden rounded-[2rem] bg-card text-foreground shadow-[0_24px_60px_rgba(0,0,0,0.08)] ring-1 ring-border">
+        <div className="relative grid gap-6 p-6 before:absolute before:inset-y-6 before:start-0 before:w-2 before:rounded-full before:bg-primary sm:p-8 lg:grid-cols-[1fr_auto] lg:items-end">
           <div className="space-y-3">
-            <p className="text-sm font-medium text-white/70">{todayStr}</p>
-            <h1 className="text-4xl font-bold leading-[44px] sm:text-[52px] sm:leading-[64px]">{t.dashboard.operationsLedger}</h1>
-            <p className="max-w-2xl text-base leading-6 text-white/70">
+            <p className="text-sm font-bold text-muted">{todayStr}</p>
+            <h1 className="text-4xl font-black leading-[44px] tracking-tight sm:text-[52px] sm:leading-[64px]">{t.dashboard.operationsLedger}</h1>
+            <p className="max-w-2xl text-base leading-6 text-muted">
               {t.dashboard.ledgerSubtitle} · {user.name} · {t.roles[user.role]}
               {user.departmentName ? ` — ${user.departmentName}` : ""}
             </p>
           </div>
-          <div className="flex flex-wrap gap-2 rounded-full bg-white/10 p-1">
-            <span className="rounded-full bg-white px-4 py-2 text-sm font-medium text-primary">{t.dashboard.today}</span>
-            <span className="rounded-full px-4 py-2 text-sm font-medium text-white/70">{t.dashboard.thisMonth}</span>
-            <span className="rounded-full px-4 py-2 text-sm font-medium text-white/70">{user.departmentName ?? t.dashboard.allDepartments}</span>
+          <div className="flex flex-wrap gap-2 rounded-full bg-canvas-soft p-1 shadow-inner">
+            <span className="rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground">{t.dashboard.today}</span>
+            <span className="rounded-full px-4 py-2 text-sm font-bold text-muted">{t.dashboard.thisMonth}</span>
+            <span className="rounded-full px-4 py-2 text-sm font-bold text-muted">{user.departmentName ?? t.dashboard.allDepartments}</span>
           </div>
         </div>
       </section>
 
       {viewFinancials ? (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <StatTile label={t.dashboard.todayIncome} value={money(dec(sums.totalIncome))} suffix={t.app.currency} />
           <StatTile label={t.dashboard.todayExpenses} value={money(dec(todayExpenses._sum.amount))} suffix={t.app.currency} />
           <StatTile
@@ -234,7 +234,7 @@ export default async function DashboardPage() {
         </div>
       ) : null}
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {can(user, "inventory.view") ? (
           <>
             <StatTile label={t.dashboard.inventoryValue} value={money(inventoryValue)} suffix={t.app.currency} />
@@ -269,9 +269,9 @@ export default async function DashboardPage() {
       </div>
 
       {viewFinancials ? (
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="grid gap-5 lg:grid-cols-2">
           <Card>
-            <h2 className="mb-4 text-lg font-black">{t.dashboard.incomeTrend}</h2>
+            <h2 className="mb-5 text-2xl font-black tracking-tight">{t.dashboard.incomeTrend}</h2>
             {hasTrend ? (
               <ColumnChart data={trendData} />
             ) : (
@@ -280,7 +280,7 @@ export default async function DashboardPage() {
           </Card>
           {byDeptData.length > 0 ? (
             <Card>
-              <h2 className="mb-4 text-lg font-black">{t.dashboard.incomeByDepartment}</h2>
+              <h2 className="mb-5 text-2xl font-black tracking-tight">{t.dashboard.incomeByDepartment}</h2>
               <HBarChart data={byDeptData} />
             </Card>
           ) : null}

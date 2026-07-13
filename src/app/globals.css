@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
+  --background: #f6f6f2;
   --foreground: #000000;
   --card: #ffffff;
   --primary: #000000;
@@ -9,8 +9,8 @@
   --primary-foreground: #ffffff;
   --muted: #5e5e5e;
   --border: #e2e2e2;
-  --canvas-soft: #efefef;
-  --canvas-softer: #f3f3f3;
+  --canvas-soft: #eeeeea;
+  --canvas-softer: #fafaf7;
   --surface-pressed: #e2e2e2;
   --hairline-mid: #4b4b4b;
   --danger: #d92d20;
@@ -44,6 +44,7 @@ html { scroll-behavior: smooth; }
 
 /* Design-analysis tokens: black/white duet, 4px rhythm, 16px cards, 999px interactive pills. */
 body {
+  min-width: 320px;
   font-family: var(--font-sans);
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
