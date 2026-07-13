@@ -22,7 +22,7 @@ export function HBarChart({
               {formatMoney(d.value)} {t.app.currency}
             </span>
           </div>
-          <div className="h-3 overflow-hidden rounded-full bg-neutral-100">
+          <div className="h-3 overflow-hidden rounded-full bg-canvas-soft">
             <div
               className="h-full rounded-full bg-foreground"
               style={{ width: `${(d.value / max) * 100}%` }}
@@ -41,11 +41,11 @@ export function ColumnChart({
 }) {
   const max = Math.max(...data.map((d) => d.value), 1);
   return (
-    <div className="flex h-44 items-end gap-1.5 rounded-3xl bg-neutral-50 p-3">
+    <div className="flex h-48 items-end gap-1.5 rounded-[1.35rem] bg-gradient-to-b from-canvas-softer to-canvas-soft p-4">
       {data.map((d, i) => (
         <div key={i} className="flex-1 flex flex-col items-center gap-1 min-w-0">
           <div
-            className="w-full rounded-t-xl bg-foreground/80 transition-colors hover:bg-foreground"
+            className="w-full rounded-t-xl bg-primary/85 shadow-[0_8px_18px_rgba(0,0,0,0.12)] transition-colors hover:bg-primary"
             style={{ height: `${(d.value / max) * 100}%` }}
             title={`${d.label}: ${formatMoney(d.value)} ${t.app.currency}`}
           />
@@ -78,9 +78,9 @@ export function StatTile({
           ? "text-success"
           : "";
   return (
-    <div className="rounded-[1.75rem] border border-border bg-card p-5 shadow-sm shadow-black/[0.03] transition hover:-translate-y-0.5 hover:shadow-md">
-      <p className="mb-3 text-xs font-bold text-muted">{label}</p>
-      <p className={`dir-ltr text-start text-2xl font-black tracking-tight ${toneClass}`}>
+    <div className="group rounded-[1.5rem] border border-border bg-card p-6 shadow-[0_14px_32px_rgba(0,0,0,0.06)] transition hover:-translate-y-0.5 hover:shadow-[0_20px_44px_rgba(0,0,0,0.09)]">
+      <p className="mb-3 text-sm font-bold leading-5 text-muted">{label}</p>
+      <p className={`dir-ltr text-start text-3xl font-black leading-9 tracking-tight ${toneClass}`}>
         {value}
         {suffix ? <span className="text-xs font-normal"> {suffix}</span> : null}
       </p>

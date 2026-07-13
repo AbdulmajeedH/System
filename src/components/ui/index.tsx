@@ -11,13 +11,14 @@ function cx(...classes: Array<string | false | null | undefined>): string {
   return classes.filter(Boolean).join(" ");
 }
 
-type ButtonVariant = "primary" | "secondary" | "danger" | "ghost";
+type ButtonVariant = "primary" | "secondary" | "subtle" | "danger" | "ghost";
 
 const buttonVariants: Record<ButtonVariant, string> = {
-  primary: "bg-primary text-primary-foreground shadow-[0_10px_24px_rgba(0,0,0,0.14)] hover:bg-primary-hover active:translate-y-px",
-  secondary: "bg-card border border-border text-foreground hover:border-foreground hover:bg-neutral-50 active:translate-y-px",
-  danger: "bg-danger text-white hover:bg-red-700 active:translate-y-px",
-  ghost: "text-foreground hover:bg-black/5 active:bg-black/10",
+  primary: "bg-primary text-primary-foreground shadow-[0_10px_24px_rgba(0,0,0,0.16)] hover:bg-primary-hover active:bg-primary-hover",
+  secondary: "bg-card text-foreground shadow-sm ring-1 ring-inset ring-border hover:bg-canvas-softer active:bg-surface-pressed",
+  subtle: "bg-canvas-soft text-foreground hover:bg-surface-pressed active:bg-surface-pressed",
+  danger: "bg-danger text-white hover:bg-red-700 active:bg-red-800",
+  ghost: "text-foreground hover:bg-canvas-soft active:bg-surface-pressed",
 };
 
 export function Button({
@@ -28,8 +29,8 @@ export function Button({
   return (
     <button
       className={cx(
-        "inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl px-5 py-3 text-base font-bold",
-        "transition disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/20",
+        "inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-5 py-3 text-base font-bold leading-5",
+        "transition-colors disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/20",
         buttonVariants[variant],
         className,
       )}
@@ -39,9 +40,9 @@ export function Button({
 }
 
 const controlClass =
-  "w-full rounded-2xl border border-border bg-card px-4 py-3 text-base min-h-12 shadow-sm shadow-black/[0.02] " +
-  "placeholder:text-neutral-400 transition focus:outline-none focus:ring-4 focus:ring-primary/15 focus:border-foreground " +
-  "disabled:opacity-60 disabled:bg-neutral-100";
+  "w-full rounded-2xl border-0 bg-canvas-soft px-4 py-4 text-base leading-6 text-foreground min-h-14 " +
+  "placeholder:text-muted transition-colors focus:outline-none focus:ring-4 focus:ring-primary/15 focus:bg-canvas-softer " +
+  "disabled:opacity-60 disabled:bg-surface-pressed";
 
 export function Input({ className, ...props }: InputHTMLAttributes<HTMLInputElement>) {
   return <input className={cx(controlClass, className)} {...props} />;
@@ -74,7 +75,7 @@ export function FormField({
 }) {
   return (
     <div className="space-y-2">
-      <label className="block text-sm font-bold text-foreground">
+      <label className="block text-sm font-medium leading-4 text-foreground">
         {label}
         {required ? <span className="text-danger" aria-label={t.ui.required}> *</span> : null}
       </label>
@@ -87,7 +88,7 @@ export function FormField({
 
 export function Card({ className, children }: { className?: string; children: ReactNode }) {
   return (
-    <div className={cx("rounded-[1.75rem] border border-border bg-card p-4 shadow-sm shadow-black/[0.03] sm:p-6", className)}>
+    <div className={cx("rounded-[1.5rem] border border-border bg-card p-6 shadow-[0_16px_40px_rgba(0,0,0,0.06)]", className)}>
       {children}
     </div>
   );
@@ -105,11 +106,11 @@ export function PageHeader({
   action?: ReactNode;
 }) {
   return (
-    <div className="mb-5 flex flex-col gap-4 sm:mb-7 sm:flex-row sm:items-end sm:justify-between">
+    <div className="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-end sm:justify-between">
       <div className="min-w-0 space-y-1.5">
-        {eyebrow ? <p className="text-xs font-bold uppercase tracking-[0.18em] text-muted">{eyebrow}</p> : null}
-        <h1 className="text-3xl font-black tracking-tight text-foreground sm:text-4xl">{title}</h1>
-        {subtitle ? <p className="max-w-3xl text-sm leading-6 text-muted sm:text-base">{subtitle}</p> : null}
+        {eyebrow ? <p className="text-xs font-normal leading-5 text-muted">{eyebrow}</p> : null}
+        <h1 className="text-4xl font-bold leading-[44px] text-foreground sm:text-[52px] sm:leading-[64px]">{title}</h1>
+        {subtitle ? <p className="max-w-3xl text-base leading-6 text-muted sm:text-lg">{subtitle}</p> : null}
       </div>
       {action ? <div className="shrink-0">{action}</div> : null}
     </div>
@@ -118,8 +119,8 @@ export function PageHeader({
 
 export function EmptyState({ message, title = t.ui.emptyTitle }: { message: string; title?: string }) {
   return (
-    <div className="rounded-[1.75rem] border border-dashed border-border bg-neutral-50 px-6 py-12 text-center">
-      <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-2xl bg-white text-xl shadow-sm" aria-hidden>•</div>
+    <div className="rounded-[1.5rem] bg-canvas-soft px-8 py-12 text-center shadow-inner">
+      <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-full bg-white text-xl" aria-hidden>•</div>
       <h2 className="font-bold text-foreground">{title}</h2>
       <p className="mt-1 text-sm leading-6 text-muted">{message}</p>
     </div>
@@ -127,7 +128,7 @@ export function EmptyState({ message, title = t.ui.emptyTitle }: { message: stri
 }
 
 export function LoadingSkeleton({ className }: { className?: string }) {
-  return <div className={cx("animate-pulse rounded-2xl bg-neutral-200", className ?? "h-24")} />;
+  return <div className={cx("animate-pulse rounded-2xl bg-canvas-soft", className ?? "h-24")} />;
 }
 
 type BadgeTone = "gray" | "green" | "red" | "amber" | "blue" | "teal";
@@ -143,7 +144,7 @@ const badgeTones: Record<BadgeTone, string> = {
 
 export function Badge({ tone = "gray", children }: { tone?: BadgeTone; children: ReactNode }) {
   return (
-    <span className={cx("inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold ring-1 whitespace-nowrap", badgeTones[tone])}>
+    <span className={cx("inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-medium leading-5 ring-1 whitespace-nowrap", badgeTones[tone])}>
       <span className="size-1.5 rounded-full bg-current" aria-hidden />
       {children}
     </span>
@@ -163,12 +164,12 @@ export function StatusBadge({ status, label }: { status: string; label: string }
 
 export function DataCard({ title, meta, value, action }: { title: string; meta?: ReactNode; value?: ReactNode; action?: ReactNode }) {
   return (
-    <Card className="flex items-start justify-between gap-4">
+    <Card className="flex items-start justify-between gap-4 bg-canvas-soft">
       <div className="min-w-0">
-        <h3 className="truncate text-base font-bold">{title}</h3>
+        <h3 className="truncate text-base font-medium">{title}</h3>
         {meta ? <div className="mt-2 text-sm text-muted">{meta}</div> : null}
       </div>
-      {value ? <div className="shrink-0 text-end font-black">{value}</div> : null}
+      {value ? <div className="shrink-0 text-end text-lg font-bold">{value}</div> : null}
       {action ? <div className="shrink-0">{action}</div> : null}
     </Card>
   );

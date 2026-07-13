@@ -12,7 +12,7 @@ import {
 import { roleSatisfies } from "@/lib/services/approvals";
 import { t } from "@/lib/i18n/ar";
 import { formatMoney, toDateInputValue } from "@/lib/utils/format";
-import { Card, PageHeader } from "@/components/ui";
+import { Card } from "@/components/ui";
 import { ColumnChart, HBarChart, StatTile } from "@/components/ui/charts";
 
 export const metadata = { title: t.dashboard.title };
@@ -190,20 +190,26 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title={t.dashboard.title}
-        eyebrow={todayStr}
-        subtitle={`${t.dashboard.welcome}، ${user.name} · ${t.roles[user.role]}${user.departmentName ? ` — ${user.departmentName}` : ""}`}
-      />
-
-      <div className="flex flex-wrap gap-2 rounded-[1.75rem] border border-border bg-card p-2 shadow-sm shadow-black/[0.03]">
-        <span className="rounded-2xl bg-black px-4 py-2 text-sm font-bold text-white">{t.dashboard.today}</span>
-        <span className="rounded-2xl px-4 py-2 text-sm font-bold text-muted">{t.dashboard.thisMonth}</span>
-        <span className="rounded-2xl px-4 py-2 text-sm font-bold text-muted">{user.departmentName ?? t.dashboard.allDepartments}</span>
-      </div>
+      <section className="overflow-hidden rounded-[2rem] bg-card text-foreground shadow-[0_24px_60px_rgba(0,0,0,0.08)] ring-1 ring-border">
+        <div className="relative grid gap-6 p-6 before:absolute before:inset-y-6 before:start-0 before:w-2 before:rounded-full before:bg-primary sm:p-8 lg:grid-cols-[1fr_auto] lg:items-end">
+          <div className="space-y-3">
+            <p className="text-sm font-bold text-muted">{todayStr}</p>
+            <h1 className="text-4xl font-black leading-[44px] tracking-tight sm:text-[52px] sm:leading-[64px]">{t.dashboard.operationsLedger}</h1>
+            <p className="max-w-2xl text-base leading-6 text-muted">
+              {t.dashboard.ledgerSubtitle} · {user.name} · {t.roles[user.role]}
+              {user.departmentName ? ` — ${user.departmentName}` : ""}
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2 rounded-full bg-canvas-soft p-1 shadow-inner">
+            <span className="rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground">{t.dashboard.today}</span>
+            <span className="rounded-full px-4 py-2 text-sm font-bold text-muted">{t.dashboard.thisMonth}</span>
+            <span className="rounded-full px-4 py-2 text-sm font-bold text-muted">{user.departmentName ?? t.dashboard.allDepartments}</span>
+          </div>
+        </div>
+      </section>
 
       {viewFinancials ? (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <StatTile label={t.dashboard.todayIncome} value={money(dec(sums.totalIncome))} suffix={t.app.currency} />
           <StatTile label={t.dashboard.todayExpenses} value={money(dec(todayExpenses._sum.amount))} suffix={t.app.currency} />
           <StatTile
@@ -228,7 +234,7 @@ export default async function DashboardPage() {
         </div>
       ) : null}
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {can(user, "inventory.view") ? (
           <>
             <StatTile label={t.dashboard.inventoryValue} value={money(inventoryValue)} suffix={t.app.currency} />
@@ -263,18 +269,18 @@ export default async function DashboardPage() {
       </div>
 
       {viewFinancials ? (
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="grid gap-5 lg:grid-cols-2">
           <Card>
-            <h2 className="mb-4 text-lg font-black">{t.dashboard.incomeTrend}</h2>
+            <h2 className="mb-5 text-2xl font-black tracking-tight">{t.dashboard.incomeTrend}</h2>
             {hasTrend ? (
               <ColumnChart data={trendData} />
             ) : (
-              <p className="rounded-3xl bg-neutral-50 p-8 text-center text-sm text-muted">{t.dashboard.noData}</p>
+              <p className="rounded-2xl bg-canvas-soft p-8 text-center text-sm text-muted">{t.dashboard.noData}</p>
             )}
           </Card>
           {byDeptData.length > 0 ? (
             <Card>
-              <h2 className="mb-4 text-lg font-black">{t.dashboard.incomeByDepartment}</h2>
+              <h2 className="mb-5 text-2xl font-black tracking-tight">{t.dashboard.incomeByDepartment}</h2>
               <HBarChart data={byDeptData} />
             </Card>
           ) : null}

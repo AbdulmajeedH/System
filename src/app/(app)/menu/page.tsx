@@ -18,7 +18,7 @@ export default async function MenuPage() {
           <Link
             key={item.href}
             href={item.href}
-            className="flex min-h-32 flex-col items-center justify-center gap-3 rounded-[1.75rem] border border-border bg-card p-5 text-sm font-bold shadow-sm shadow-black/[0.03] transition hover:-translate-y-0.5 hover:border-foreground"
+            className="flex min-h-32 flex-col items-center justify-center gap-3 rounded-2xl bg-canvas-soft p-6 text-sm font-medium transition-colors hover:bg-surface-pressed"
           >
             <span className="text-2xl" aria-hidden>{item.icon}</span>
             {item.label}
