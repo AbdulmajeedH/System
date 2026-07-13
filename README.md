@@ -119,7 +119,7 @@ Vercel can't run Docker or keep files on disk, so you need a hosted database and
    ```
    npm run vercel-build
    ```
-   (runs `prisma generate && prisma migrate deploy && next build`, so every deploy applies pending migrations.)
+   (runs `prisma generate && next build` — the build does not touch the database.)
 4. **Environment variables** (Project → Settings → Environment Variables):
    | Variable | Value |
    |---|---|
@@ -128,10 +128,9 @@ Vercel can't run Docker or keep files on disk, so you need a hosted database and
    | `AUTH_SECRET` | output of `openssl rand -hex 32` |
    | `STORAGE_DRIVER` | `s3` |
    | `S3_BUCKET` / `S3_REGION` / `S3_ENDPOINT` / `S3_ACCESS_KEY_ID` / `S3_SECRET_ACCESS_KEY` | from step 2 (`S3_REGION=auto` and set `S3_ENDPOINT` for R2; omit `S3_ENDPOINT` for AWS) |
-5. **Seed once** from your machine against the production database (use the direct/unpooled string):
-   ```bash
-   DATABASE_URL="<neon-direct-connection-string>" npx prisma db seed
-   ```
+5. **Initialize the database once** — no terminal needed: open the Neon console → **SQL Editor**, paste the full contents of [`prisma/production-setup.sql`](prisma/production-setup.sql) (schema + seed data, generated from a verified database), and click **Run**. Must be run against an **empty** database.
+   - Terminal alternative: `DATABASE_URL="<direct-string>" npx prisma migrate deploy && DATABASE_URL="<direct-string>" npx prisma db seed`
+   - For **future schema changes**, run `npx prisma migrate deploy` against the direct URL (the Vercel build intentionally skips migrations).
 6. Deploy, then log in with the seeded owner account and **immediately change the seeded passwords** from the users screen.
 
 ## Architecture rules
