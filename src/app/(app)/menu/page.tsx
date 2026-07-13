@@ -13,12 +13,12 @@ export default async function MenuPage() {
   return (
     <div>
       <PageHeader title={t.nav.more} />
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
         {items.map((item) => (
           <Link
             key={item.href}
             href={item.href}
-            className="flex flex-col items-center gap-2 rounded-2xl border border-border bg-card p-5 text-sm font-medium hover:border-primary"
+            className="flex min-h-32 flex-col items-center justify-center gap-3 rounded-2xl bg-canvas-soft p-6 text-sm font-medium transition-colors hover:bg-surface-pressed"
           >
             <span className="text-2xl" aria-hidden>{item.icon}</span>
             {item.label}

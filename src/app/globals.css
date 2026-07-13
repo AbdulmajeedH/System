@@ -1,17 +1,22 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
+  --background: #f6f6f2;
+  --foreground: #000000;
   --card: #ffffff;
-  --primary: #0d9488;
-  --primary-hover: #0f766e;
+  --primary: #000000;
+  --primary-hover: #282828;
   --primary-foreground: #ffffff;
-  --muted: #64748b;
-  --border: #e2e8f0;
-  --danger: #dc2626;
-  --success: #16a34a;
-  --warning: #d97706;
+  --muted: #5e5e5e;
+  --border: #e2e2e2;
+  --canvas-soft: #eeeeea;
+  --canvas-softer: #fafaf7;
+  --surface-pressed: #e2e2e2;
+  --hairline-mid: #4b4b4b;
+  --danger: #d92d20;
+  --success: #067647;
+  --warning: #b54708;
+  --accent: #0000ee;
 }
 
 @theme inline {
@@ -26,20 +31,40 @@
   --color-danger: var(--danger);
   --color-success: var(--success);
   --color-warning: var(--warning);
-  --font-sans: var(--font-plex-arabic), "Segoe UI", Tahoma, Arial, sans-serif;
+  --color-accent: var(--accent);
+  --color-canvas-soft: var(--canvas-soft);
+  --color-canvas-softer: var(--canvas-softer);
+  --color-surface-pressed: var(--surface-pressed);
+  --color-hairline-mid: var(--hairline-mid);
+  --font-sans: Inter, "Segoe UI", Tahoma, Arial, sans-serif;
 }
 
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+/* Design-analysis tokens: black/white duet, 4px rhythm, 16px cards, 999px interactive pills. */
 body {
+  min-width: 320px;
   font-family: var(--font-sans);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Keep numerals and latin fragments readable inside RTL text */
-.dir-ltr {
-  direction: ltr;
-  unicode-bidi: embed;
-}
+::selection { background: #050505; color: #fff; }
 
-input[type="number"] {
+.dir-ltr { direction: ltr; unicode-bidi: embed; }
+input[type="number"], input[type="email"], input[type="password"], input[type="url"], input[type="tel"] {
   direction: ltr;
   text-align: end;
+}
+
+:focus-visible { outline: 3px solid rgb(5 5 5 / 0.24); outline-offset: 3px; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
 }
