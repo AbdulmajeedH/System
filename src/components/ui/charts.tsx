@@ -24,7 +24,7 @@ export function HBarChart({
           </div>
           <div className="h-3 overflow-hidden rounded-full bg-canvas-soft">
             <div
-              className="h-full rounded-full bg-primary"
+              className="h-full rounded-full bg-foreground"
               style={{ width: `${(d.value / max) * 100}%` }}
             />
           </div>
