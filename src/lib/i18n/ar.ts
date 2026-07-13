@@ -77,6 +77,8 @@ export const ar = {
     logout: "تسجيل الخروج",
   },
   auth: {
+    loginEyebrow: "نظام داخلي لإدارة العمليات اليومية",
+    loginWelcome: "مرحباً بعودتك",
     loginTitle: "تسجيل الدخول",
     email: "البريد الإلكتروني",
     password: "كلمة المرور",
@@ -84,6 +86,16 @@ export const ar = {
     invalidCredentials: "البريد الإلكتروني أو كلمة المرور غير صحيحة",
     accountDisabled: "هذا الحساب موقوف، تواصل مع الإدارة",
     welcome: "مرحباً",
+  },
+  ui: {
+    brandMark: "RB",
+    mainNavigation: "التنقل الرئيسي",
+    mobileNavigation: "تنقل الجوال",
+    emptyTitle: "لا توجد بيانات",
+    inventory: "مخزون",
+    purchasing: "مشتريات",
+    reports: "تقارير",
+    required: "مطلوب",
   },
   roles: {
     OWNER: "مالك",
@@ -170,6 +182,9 @@ export const ar = {
     incomeTrend: "اتجاه الدخل (١٤ يوم)",
     noData: "لا توجد بيانات بعد",
     viewAll: "عرض الكل",
+    today: "اليوم",
+    thisMonth: "هذا الشهر",
+    allDepartments: "كل الأقسام",
   },
   income: {
     title: "الدخل اليومي",

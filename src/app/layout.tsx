@@ -1,12 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { IBM_Plex_Sans_Arabic } from "next/font/google";
 import "./globals.css";
-
-const plexArabic = IBM_Plex_Sans_Arabic({
-  variable: "--font-plex-arabic",
-  subsets: ["arabic", "latin"],
-  weight: ["300", "400", "500", "600", "700"],
-});
 
 export const metadata: Metadata = {
   title: {
@@ -28,7 +21,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ar" dir="rtl" className={`${plexArabic.variable} h-full antialiased`}>
+    <html lang="ar" dir="rtl" className="h-full antialiased">
       <body className="min-h-full flex flex-col font-sans bg-background text-foreground">
         {children}
       </body>
