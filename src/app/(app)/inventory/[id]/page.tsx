@@ -66,6 +66,14 @@ export default async function ItemDetailPage({ params }: { params: Promise<{ id:
       />
 
       <Card className="text-sm space-y-1.5">
+        {item.imageKey ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={`/api/files/${item.imageKey}`}
+            alt={item.nameAr}
+            className="mb-3 h-40 w-full rounded-lg object-cover"
+          />
+        ) : null}
         <div className="flex flex-wrap gap-2 mb-2">
           <Badge tone="blue">{item.sku}</Badge>
           {item.category ? <Badge tone="teal">{item.category.nameAr}</Badge> : null}

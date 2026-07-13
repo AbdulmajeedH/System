@@ -3,11 +3,13 @@ import { notFound, redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth/guards";
 import { can } from "@/lib/auth/permissions";
 import { prisma } from "@/lib/db";
-import { InvoiceStatus } from "@/generated/prisma/enums";
+import { AttachmentEntityType, InvoiceStatus } from "@/generated/prisma/enums";
 import { t } from "@/lib/i18n/ar";
 import { formatDate, formatDateTime, formatMoney, formatQty } from "@/lib/utils/format";
 import { Button, Card, PageHeader, StatusBadge } from "@/components/ui";
+import { AttachmentsList } from "@/components/attachments-list";
 import { DecideInvoiceButtons, ReceiveInvoiceButton } from "./invoice-actions";
+import { SupplierReturnPanel } from "./supplier-return-panel";
 
 export const metadata = { title: t.invoices.invoice };
 
@@ -132,8 +134,20 @@ export default async function InvoiceDetailPage({
         </div>
       </Card>
 
+      <AttachmentsList entityType={AttachmentEntityType.PURCHASE_INVOICE} entityIds={[id]} />
+
       {canDecide ? <DecideInvoiceButtons invoiceId={id} /> : null}
       {canReceive ? <ReceiveInvoiceButton invoiceId={id} /> : null}
+      {invoice.status === InvoiceStatus.RECEIVED && can(user, "warehouse.manage") ? (
+        <SupplierReturnPanel
+          invoiceId={id}
+          lines={invoice.items.map((line) => ({
+            itemId: line.itemId,
+            nameAr: line.item.nameAr,
+            quantity: line.quantity.toString(),
+          }))}
+        />
+      ) : null}
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import {
+  ArrowLeftRight,
   BadgeCheck,
   Banknote,
   Boxes,
@@ -11,6 +12,7 @@ import {
   Receipt,
   Repeat,
   ScrollText,
+  Settings,
   TriangleAlert,
   Truck,
   Users,
@@ -34,4 +36,6 @@ export const NAV_ICONS: Record<string, LucideIcon> = {
   auditLog: ScrollText,
   menu: Menu,
   tasks: ListChecks,
+  settings: Settings,
+  transfersNav: ArrowLeftRight,
 };

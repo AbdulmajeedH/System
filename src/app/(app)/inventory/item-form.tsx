@@ -175,6 +175,9 @@ export function ItemForm({
           />
           {t.inventory.expiryTracking}
         </label>
+        <FormField label={t.inventory.itemImage}>
+          <Input name="image" type="file" accept="image/*" />
+        </FormField>
         <FormField label={t.common.notes} error={state.fieldErrors?.notes}>
           <Textarea name="notes" defaultValue={initial?.notes} />
         </FormField>

@@ -3,11 +3,13 @@ import { NextResponse, type NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getStorage } from "@/lib/services/storage";
+import { isSafeStorageKey } from "@/lib/services/storage/attachment-rules";
+import { canViewAttachment } from "@/lib/services/attachment-access";
 
 /**
- * Serves stored attachments to authenticated users. Owner/GM see everything;
- * other users see files they uploaded or files belonging to their department's
- * records (uploader in same department).
+ * Serves stored attachments to authenticated users. Authorization is
+ * entity-specific (see attachment-access.ts): access follows the related
+ * record's department/location and the caller's permissions over it.
  */
 export async function GET(
   _request: NextRequest,
@@ -20,18 +22,15 @@ export async function GET(
 
   const { key } = await params;
   const storageKey = key.join("/");
+  if (!isSafeStorageKey(storageKey)) notFound();
 
   const attachment = await prisma.fileAttachment.findUnique({
     where: { storageKey },
-    include: { uploadedBy: { select: { departmentId: true } } },
   });
   if (!attachment) notFound();
 
-  const isPrivileged = user.role === "OWNER" || user.role === "GENERAL_MANAGER";
-  const isUploader = attachment.uploadedById === user.id;
-  const sameDepartment =
-    user.departmentId !== null && attachment.uploadedBy.departmentId === user.departmentId;
-  if (!isPrivileged && !isUploader && !sameDepartment) {
+  const allowed = await canViewAttachment(prisma, user, attachment);
+  if (!allowed) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 
@@ -43,6 +42,7 @@ export async function GET(
       "Content-Type": attachment.mimeType,
       "Content-Disposition": `inline; filename="${encodeURIComponent(attachment.fileName)}"`,
       "Cache-Control": "private, max-age=3600",
+      "X-Content-Type-Options": "nosniff",
     },
   });
 }

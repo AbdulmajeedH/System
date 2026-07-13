@@ -7,10 +7,12 @@ import { Prisma } from "@/generated/prisma/client";
 import {
   ApprovalDecision,
   ApprovalTransactionType,
+  AttachmentEntityType,
   MovementType,
   StockCountStatus,
   StockCountType,
 } from "@/generated/prisma/enums";
+import { AttachmentError, saveAttachments } from "@/lib/services/attachments";
 import { actionPermission } from "@/lib/auth/guards";
 import { audit } from "@/lib/services/audit";
 import {
@@ -150,6 +152,14 @@ export async function createStockCount(_prev: FormState, formData: FormData): Pr
     });
   } catch {
     return unknownError();
+  }
+
+  const files = formData.getAll("attachments").filter((f): f is File => f instanceof File);
+  try {
+    await saveAttachments(files, AttachmentEntityType.STOCK_COUNT, result.countId, user.id);
+  } catch (error) {
+    if (error instanceof AttachmentError) return { error: error.message };
+    throw error;
   }
 
   await audit({

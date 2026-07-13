@@ -17,6 +17,7 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/invoices", label: t.nav.invoices, icon: "invoices", permissions: ["invoice.manage", "invoice.approve", "warehouse.manage"] },
   { href: "/inventory", label: t.nav.inventory, icon: "inventory", permissions: ["inventory.view"] },
   { href: "/stock-requests", label: t.nav.stockRequests, icon: "stockRequests", permissions: ["stock.request", "warehouse.manage", "inventory.viewAll"] },
+  { href: "/transfers", label: t.nav.transfers, icon: "transfersNav", permissions: ["stock.request", "warehouse.manage"] },
   { href: "/stock-counts", label: t.nav.stockCounts, icon: "stockCounts", permissions: ["count.perform", "count.approve"] },
   { href: "/damages", label: t.nav.damages, icon: "damages", permissions: ["damage.record", "damage.approve"] },
   { href: "/approvals", label: t.nav.approvals, icon: "approvals", permissions: ["approvals.act"] },
@@ -24,6 +25,7 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/suppliers", label: t.nav.suppliers, icon: "suppliers", permissions: ["supplier.manage"] },
   { href: "/users", label: t.nav.users, icon: "users", permissions: ["users.manage"] },
   { href: "/audit-log", label: t.nav.auditLog, icon: "auditLog", permissions: ["audit.view"] },
+  { href: "/settings", label: t.nav.settings, icon: "settings", permissions: ["settings.manage"] },
 ];
 
 export function navItemsFor(user: SessionUser): NavItem[] {

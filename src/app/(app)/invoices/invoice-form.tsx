@@ -260,6 +260,9 @@ export function InvoiceForm({
           <span className="font-bold">{t.invoices.grandTotal}</span>
           <span className="font-bold dir-ltr">{formatMoney(total)} {t.app.currency}</span>
         </div>
+        <FormField label={t.common.attachments} hint={t.invoices.attachmentsHint}>
+          <Input name="attachments" type="file" accept="image/*,application/pdf" multiple />
+        </FormField>
         <FormField label={t.common.notes} error={state.fieldErrors?.notes}>
           <Textarea name="notes" defaultValue={initial?.notes} />
         </FormField>

@@ -2,7 +2,8 @@ import { notFound, redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth/guards";
 import { can, canAccessDepartment } from "@/lib/auth/permissions";
 import { prisma } from "@/lib/db";
-import { StockRequestStatus } from "@/generated/prisma/enums";
+import { AttachmentEntityType, StockRequestStatus } from "@/generated/prisma/enums";
+import { AttachmentsList } from "@/components/attachments-list";
 import { t } from "@/lib/i18n/ar";
 import { formatDate, formatQty } from "@/lib/utils/format";
 import { Badge, Card, PageHeader, StatusBadge } from "@/components/ui";
@@ -164,6 +165,13 @@ export default async function StockRequestDetailPage({
           </table>
         </div>
       </Card>
+
+      {transfer ? (
+        <AttachmentsList
+          entityType={AttachmentEntityType.STOCK_TRANSFER}
+          entityIds={[transfer.id]}
+        />
+      ) : null}
 
       {/* Warehouse actions */}
       {isWarehouse && status === StockRequestStatus.SUBMITTED ? (

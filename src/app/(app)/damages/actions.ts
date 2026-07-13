@@ -81,7 +81,9 @@ export async function createDamage(_prev: FormState, formData: FormData): Promis
   let result: { damageId: string; autoApproved: boolean };
   try {
     result = await withSerializableTx(async (tx) => {
-      const item = await tx.inventoryItem.findUniqueOrThrow({ where: { id: itemId } });
+      const item = await tx.inventoryItem.findFirstOrThrow({
+        where: { id: itemId, isActive: true },
+      });
       const estimatedCost = quantity.mul(item.averageCost).toDecimalPlaces(2);
       const location = await tx.inventoryLocation.findUniqueOrThrow({ where: { id: locationId } });
 
