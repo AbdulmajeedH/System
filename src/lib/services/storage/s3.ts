@@ -18,16 +18,24 @@ export class S3StorageProvider implements StorageProvider {
   private readonly client: S3Client;
   private readonly bucket: string;
 
-  constructor() {
-    const bucket = process.env.S3_BUCKET;
-    if (!bucket) throw new Error("S3_BUCKET is not set");
-    this.bucket = bucket;
+  constructor(env: Record<string, string | undefined> = process.env) {
+    const missing = ["S3_BUCKET", "S3_ACCESS_KEY_ID", "S3_SECRET_ACCESS_KEY"].filter(
+      (key) => !env[key]?.trim(),
+    );
+    if (missing.length > 0) {
+      throw new Error(
+        `S3 storage configuration is incomplete — missing: ${missing.join(", ")}. ` +
+          "Set every required variable (S3_BUCKET, S3_REGION, S3_ACCESS_KEY_ID, " +
+          "S3_SECRET_ACCESS_KEY, and S3_ENDPOINT for non-AWS providers).",
+      );
+    }
+    this.bucket = env.S3_BUCKET!;
     this.client = new S3Client({
-      region: process.env.S3_REGION || "auto",
-      endpoint: process.env.S3_ENDPOINT || undefined,
+      region: env.S3_REGION?.trim() || "auto",
+      endpoint: env.S3_ENDPOINT?.trim() || undefined,
       credentials: {
-        accessKeyId: process.env.S3_ACCESS_KEY_ID ?? "",
-        secretAccessKey: process.env.S3_SECRET_ACCESS_KEY ?? "",
+        accessKeyId: env.S3_ACCESS_KEY_ID!,
+        secretAccessKey: env.S3_SECRET_ACCESS_KEY!,
       },
     });
   }
