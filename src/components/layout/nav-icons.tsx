@@ -1,0 +1,37 @@
+import {
+  BadgeCheck,
+  Banknote,
+  Boxes,
+  CalendarClock,
+  ClipboardList,
+  FileText,
+  LayoutDashboard,
+  ListChecks,
+  Menu,
+  Receipt,
+  Repeat,
+  ScrollText,
+  TriangleAlert,
+  Truck,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
+
+/** SVG icons for navigation — no emoji (font-dependent, uncontrollable). */
+export const NAV_ICONS: Record<string, LucideIcon> = {
+  dashboard: LayoutDashboard,
+  income: Banknote,
+  expenses: Receipt,
+  invoices: FileText,
+  inventory: Boxes,
+  stockRequests: Repeat,
+  stockCounts: ClipboardList,
+  damages: TriangleAlert,
+  approvals: BadgeCheck,
+  attendance: CalendarClock,
+  suppliers: Truck,
+  users: Users,
+  auditLog: ScrollText,
+  menu: Menu,
+  tasks: ListChecks,
+};

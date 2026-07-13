@@ -78,11 +78,11 @@ export function StatTile({
           ? "text-success"
           : "";
   return (
-    <div className="rounded-2xl bg-card border border-border p-4">
-      <p className="text-xs text-muted mb-1">{label}</p>
-      <p className={`text-lg font-bold dir-ltr text-start ${toneClass}`}>
+    <div className="rounded-xl bg-card border border-border p-4 shadow-[0_1px_2px_rgba(15,23,42,0.05)] transition-shadow duration-150 hover:shadow-[0_2px_8px_rgba(15,23,42,0.08)]">
+      <p className="text-xs text-muted mb-1.5">{label}</p>
+      <p className={`text-lg font-bold dir-ltr text-start tabular-nums ${toneClass}`}>
         {value}
-        {suffix ? <span className="text-xs font-normal"> {suffix}</span> : null}
+        {suffix ? <span className="text-xs font-normal text-muted"> {suffix}</span> : null}
       </p>
     </div>
   );

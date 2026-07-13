@@ -1,11 +1,29 @@
-import Link from "next/link";
 import type { ReactNode } from "react";
+import { LogOut, UtensilsCrossed } from "lucide-react";
 import { t } from "@/lib/i18n/ar";
 import type { SessionUser } from "@/lib/auth/session";
 import { logout } from "@/lib/auth/auth-actions";
 import { navItemsFor } from "./nav";
+import { BottomNavLink, SideNavLink } from "./nav-link";
 
 const MOBILE_NAV_COUNT = 4;
+
+function UserBadge({ user }: { user: SessionUser }) {
+  return (
+    <div className="flex items-center gap-3 min-w-0">
+      <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary font-bold">
+        {user.name.trim().charAt(0)}
+      </span>
+      <div className="min-w-0">
+        <p className="truncate text-sm font-semibold">{user.name}</p>
+        <p className="truncate text-xs text-muted">
+          {t.roles[user.role]}
+          {user.departmentName ? ` · ${user.departmentName}` : ""}
+        </p>
+      </div>
+    </div>
+  );
+}
 
 export function AppShell({ user, children }: { user: SessionUser; children: ReactNode }) {
   const items = navItemsFor(user);
@@ -16,68 +34,55 @@ export function AppShell({ user, children }: { user: SessionUser; children: Reac
     <div className="flex min-h-dvh w-full">
       {/* Desktop sidebar */}
       <aside className="hidden md:flex md:flex-col w-64 shrink-0 border-e border-border bg-card">
-        <div className="p-5 border-b border-border">
-          <p className="font-bold text-lg">{t.app.name}</p>
-          <p className="text-xs text-muted mt-1">{user.name} · {t.roles[user.role]}</p>
-          {user.departmentName ? (
-            <p className="text-xs text-muted">{user.departmentName}</p>
-          ) : null}
+        <div className="flex items-center gap-2.5 px-5 py-5 border-b border-border">
+          <span className="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+            <UtensilsCrossed className="size-5" strokeWidth={2} />
+          </span>
+          <p className="font-bold">{t.app.name}</p>
         </div>
-        <nav className="flex-1 overflow-y-auto p-3 space-y-1">
+        <nav className="flex-1 overflow-y-auto p-3 space-y-0.5">
           {items.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium hover:bg-background"
-            >
-              <span aria-hidden>{item.icon}</span>
-              {item.label}
-            </Link>
+            <SideNavLink key={item.href} href={item.href} label={item.label} icon={item.icon} />
           ))}
         </nav>
-        <form action={logout} className="p-3 border-t border-border">
-          <button className="w-full text-start rounded-xl px-3 py-2.5 text-sm font-medium text-danger hover:bg-background">
-            {t.nav.logout}
-          </button>
-        </form>
+        <div className="border-t border-border p-3 space-y-2">
+          <div className="px-2 pt-1">
+            <UserBadge user={user} />
+          </div>
+          <form action={logout}>
+            <button className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-danger transition-colors duration-150 hover:bg-danger-soft">
+              <LogOut className="size-[18px]" strokeWidth={1.8} />
+              {t.nav.logout}
+            </button>
+          </form>
+        </div>
       </aside>
 
       <div className="flex flex-1 flex-col min-w-0">
         {/* Mobile header */}
-        <header className="md:hidden sticky top-0 z-20 flex items-center justify-between gap-2 border-b border-border bg-card px-4 py-3">
-          <div>
-            <p className="font-bold">{t.app.name}</p>
-            <p className="text-xs text-muted">{user.name} · {t.roles[user.role]}</p>
-          </div>
+        <header className="md:hidden sticky top-0 z-20 flex items-center justify-between gap-2 border-b border-border bg-card/95 backdrop-blur px-4 py-3">
+          <UserBadge user={user} />
           <form action={logout}>
-            <button className="text-sm font-medium text-danger">{t.nav.logout}</button>
+            <button
+              aria-label={t.nav.logout}
+              className="flex size-9 items-center justify-center rounded-lg text-danger transition-colors duration-150 hover:bg-danger-soft"
+            >
+              <LogOut className="size-5" strokeWidth={1.8} />
+            </button>
           </form>
         </header>
 
-        <main className="flex-1 p-4 sm:p-6 pb-24 md:pb-6">{children}</main>
+        <main className="flex-1 p-4 sm:p-6 pb-24 md:pb-6 max-w-6xl w-full mx-auto">
+          {children}
+        </main>
 
         {/* Mobile bottom nav */}
-        <nav className="md:hidden fixed bottom-0 inset-x-0 z-20 border-t border-border bg-card">
+        <nav className="md:hidden fixed bottom-0 inset-x-0 z-20 border-t border-border bg-card/95 backdrop-blur pb-[env(safe-area-inset-bottom)]">
           <div className="grid auto-cols-fr grid-flow-col">
             {mobileItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="flex flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium text-muted"
-              >
-                <span className="text-lg leading-none" aria-hidden>{item.icon}</span>
-                {item.label}
-              </Link>
+              <BottomNavLink key={item.href} href={item.href} label={item.label} icon={item.icon} />
             ))}
-            {hasMore ? (
-              <Link
-                href="/menu"
-                className="flex flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium text-muted"
-              >
-                <span className="text-lg leading-none" aria-hidden>☰</span>
-                {t.nav.more}
-              </Link>
-            ) : null}
+            {hasMore ? <BottomNavLink href="/menu" label={t.nav.more} icon="menu" /> : null}
           </div>
         </nav>
       </div>

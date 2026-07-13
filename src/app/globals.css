@@ -1,17 +1,20 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f8fafc;
+  --background: #f6f7f9;
   --foreground: #0f172a;
   --card: #ffffff;
-  --primary: #0d9488;
-  --primary-hover: #0f766e;
+  --primary: #0f766e;
+  --primary-hover: #115e59;
+  --primary-soft: #f0fdfa;
   --primary-foreground: #ffffff;
   --muted: #64748b;
-  --border: #e2e8f0;
+  --border: #e5e7eb;
   --danger: #dc2626;
+  --danger-soft: #fef2f2;
   --success: #16a34a;
   --warning: #d97706;
+  --ring: #14b8a6;
 }
 
 @theme inline {
@@ -20,12 +23,15 @@
   --color-card: var(--card);
   --color-primary: var(--primary);
   --color-primary-hover: var(--primary-hover);
+  --color-primary-soft: var(--primary-soft);
   --color-primary-foreground: var(--primary-foreground);
   --color-muted: var(--muted);
   --color-border: var(--border);
   --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
   --color-success: var(--success);
   --color-warning: var(--warning);
+  --color-ring: var(--ring);
   --font-sans: var(--font-plex-arabic), "Segoe UI", Tahoma, Arial, sans-serif;
 }
 
@@ -42,4 +48,27 @@ body {
 input[type="number"] {
   direction: ltr;
   text-align: end;
+}
+
+/* Consistent, visible keyboard focus everywhere */
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+button:not(:disabled),
+a,
+select,
+label:has(input[type="checkbox"]) {
+  cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
