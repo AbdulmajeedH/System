@@ -3,6 +3,11 @@ import { randomBytes } from "crypto";
 import path from "path";
 import { prisma } from "@/lib/db";
 import { getStorage } from "./storage";
+import {
+  extensionFor,
+  isAcceptableUpload,
+  isSafeStorageKey,
+} from "./storage/attachment-rules";
 import type { AttachmentEntityType } from "@/generated/prisma/enums";
 
 const MAX_FILE_BYTES = 10 * 1024 * 1024; // 10 MB
@@ -74,7 +79,7 @@ export async function saveAttachments(
   entityType: AttachmentEntityType,
   entityId: string,
   uploadedById: string,
-): Promise<number> {
+): Promise<string[]> {
   const storage = getStorage();
   const createdKeys: string[] = [];
   const createdAttachmentIds: string[] = [];

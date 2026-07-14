@@ -4,7 +4,14 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma, withSerializableTx } from "@/lib/db";
 import { Prisma } from "@/generated/prisma/client";
-import { MovementType, StockRequestStatus } from "@/generated/prisma/enums";
+import {
+  AttachmentEntityType,
+  MovementType,
+  Role,
+  StockRequestStatus,
+} from "@/generated/prisma/enums";
+import { AttachmentError, saveAttachments } from "@/lib/services/attachments";
+import { notifyRoles } from "@/lib/services/notifications";
 import { actionPermission } from "@/lib/auth/guards";
 import { canAccessDepartment } from "@/lib/auth/permissions";
 import { audit } from "@/lib/services/audit";
@@ -49,6 +56,14 @@ export async function createStockRequest(_prev: FormState, formData: FormData): 
     return { error: t.income.cannotSubmitForOtherDept };
   }
 
+  // Only active items may be requested.
+  const activeItems = await prisma.inventoryItem.count({
+    where: { id: { in: data.lines.map((l) => l.itemId) }, isActive: true },
+  });
+  if (activeItems !== new Set(data.lines.map((l) => l.itemId)).size) {
+    return { error: t.common.inactiveSelection };
+  }
+
   const request = await prisma.stockRequest.create({
     data: {
       departmentId: data.departmentId,
@@ -64,6 +79,14 @@ export async function createStockRequest(_prev: FormState, formData: FormData): 
         })),
       },
     },
+  });
+
+  await notifyRoles(prisma, [Role.WAREHOUSE_MANAGER, Role.OWNER], {
+    type: "stock.request_new",
+    title: t.notifications.titles.requestNew,
+    entityType: "StockRequest",
+    entityId: request.id,
+    excludeUserId: user.id,
   });
 
   await audit({
@@ -206,6 +229,22 @@ export async function advanceStockRequest(
     return unknownError();
   }
 
+  if (stage === "READY" || stage === "DELIVERED") {
+    const request = await prisma.stockRequest.findUnique({
+      where: { id: requestId },
+      select: { departmentId: true },
+    });
+    if (request) {
+      await notifyRoles(prisma, [Role.DEPARTMENT_MANAGER], {
+        type: "stock.request_ready",
+        title: t.notifications.titles.requestReady,
+        entityType: "StockRequest",
+        entityId: requestId,
+        departmentId: request.departmentId,
+      });
+    }
+  }
+
   await audit({
     userId: user.id,
     action: `stock_request.${stage.toLowerCase()}`,
@@ -234,8 +273,9 @@ export async function confirmStockReceipt(
   const received = qtyInputs(formData, "received_");
   const damaged = qtyInputs(formData, "damaged_");
 
+  let confirmedTransferId: string;
   try {
-    await withSerializableTx(async (tx) => {
+    confirmedTransferId = await withSerializableTx(async (tx) => {
       const request = await tx.stockRequest.findUnique({
         where: { id: requestId },
         include: { transfers: { include: { items: true } } },
@@ -309,6 +349,7 @@ export async function confirmStockReceipt(
           status: anyMissing ? StockRequestStatus.DISPUTED : StockRequestStatus.COMPLETED,
         },
       });
+      return transfer.id;
     });
   } catch (error) {
     const message = (error as Error).message;
@@ -317,6 +358,15 @@ export async function confirmStockReceipt(
       return { error: t.stockRequests.insufficientStock };
     }
     return unknownError();
+  }
+
+  // Receiving evidence photos attach to the transfer itself.
+  const files = formData.getAll("attachments").filter((f): f is File => f instanceof File);
+  try {
+    await saveAttachments(files, AttachmentEntityType.STOCK_TRANSFER, confirmedTransferId, user.id);
+  } catch (error) {
+    if (error instanceof AttachmentError) return { error: error.message };
+    throw error;
   }
 
   await audit({

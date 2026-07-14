@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { withSerializableTx } from "@/lib/db";
+import { prisma, withSerializableTx } from "@/lib/db";
 import { Prisma } from "@/generated/prisma/client";
 import {
   ApprovalDecision,
@@ -35,6 +35,17 @@ export async function createExpense(_prev: FormState, formData: FormData): Promi
   }
   // Department-scoped users always record against their own department.
   const departmentId = user.departmentId ?? data.departmentId;
+
+  // Related rows must exist AND still be active.
+  const [category, supplier] = await Promise.all([
+    prisma.expenseCategory.findFirst({ where: { id: data.categoryId, isActive: true } }),
+    data.supplierId
+      ? prisma.supplier.findFirst({ where: { id: data.supplierId, isActive: true } })
+      : Promise.resolve(undefined),
+  ]);
+  if (!category || (data.supplierId && !supplier)) {
+    return { error: t.common.inactiveSelection };
+  }
 
   const amount = new Prisma.Decimal(data.amount);
   const files = formData.getAll("attachments").filter((f): f is File => f instanceof File);

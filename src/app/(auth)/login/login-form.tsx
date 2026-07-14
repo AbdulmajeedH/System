@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState } from "react";
 import { login, type LoginState } from "@/lib/auth/auth-actions";
 import { t } from "@/lib/i18n/ar";
@@ -30,6 +31,11 @@ export function LoginForm() {
         <Button type="submit" className="w-full" disabled={pending}>
           {pending ? t.common.loading : t.auth.login}
         </Button>
+        <p className="text-center">
+          <Link href="/forgot-password" className="text-sm font-medium text-primary">
+            {t.auth.forgotPassword}
+          </Link>
+        </p>
       </form>
     </Card>
   );

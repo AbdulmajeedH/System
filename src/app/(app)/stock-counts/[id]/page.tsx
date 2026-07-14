@@ -3,7 +3,8 @@ import { requireUser } from "@/lib/auth/guards";
 import { can } from "@/lib/auth/permissions";
 import { prisma } from "@/lib/db";
 import { Prisma } from "@/generated/prisma/client";
-import { StockCountStatus } from "@/generated/prisma/enums";
+import { AttachmentEntityType, StockCountStatus } from "@/generated/prisma/enums";
+import { AttachmentsList } from "@/components/attachments-list";
 import { t } from "@/lib/i18n/ar";
 import { formatDate, formatMoney, formatQty } from "@/lib/utils/format";
 import { Card, PageHeader, StatusBadge } from "@/components/ui";
@@ -115,6 +116,8 @@ export default async function StockCountDetailPage({
           </table>
         </div>
       </Card>
+
+      <AttachmentsList entityType={AttachmentEntityType.STOCK_COUNT} entityIds={[id]} />
 
       {canDecide ? <DecideCountButtons countId={id} /> : null}
       {count.status === StockCountStatus.SUBMITTED && !canDecide ? (

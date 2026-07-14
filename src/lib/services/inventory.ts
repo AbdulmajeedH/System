@@ -1,6 +1,8 @@
 // Relative imports (not @/ aliases) so prisma/seed.ts can run this through tsx.
 import { Prisma } from "../../generated/prisma/client";
-import { MovementType } from "../../generated/prisma/enums";
+import { MovementType, Role } from "../../generated/prisma/enums";
+import { notifyRoles } from "./notifications";
+import { t } from "../i18n/ar";
 
 const Decimal = Prisma.Decimal;
 export type DecimalValue = Prisma.Decimal;
@@ -69,6 +71,38 @@ async function adjustBalance(
 }
 
 /**
+ * Low-stock alert: fires when a location balance crosses the item's
+ * minimum (once per crossing, so repeated withdrawals don't spam).
+ * Controlled by the `inventory.low_stock_alerts` system setting.
+ */
+async function maybeNotifyLowStock(
+  tx: Prisma.TransactionClient,
+  itemId: string,
+  prev: Prisma.Decimal,
+  next: Prisma.Decimal,
+): Promise<void> {
+  const item = await tx.inventoryItem.findUnique({
+    where: { id: itemId },
+    select: { nameAr: true, minStock: true },
+  });
+  if (!item || item.minStock.lte(0)) return;
+  if (!(prev.gt(item.minStock) && next.lte(item.minStock))) return;
+
+  const setting = await tx.systemSetting.findUnique({
+    where: { key: "inventory.low_stock_alerts" },
+  });
+  if (setting?.value === "0") return;
+
+  await notifyRoles(tx, [Role.WAREHOUSE_MANAGER, Role.OWNER], {
+    type: "stock.low",
+    title: t.notifications.titles.lowStock,
+    body: item.nameAr,
+    entityType: "InventoryItem",
+    entityId: itemId,
+  });
+}
+
+/**
  * Posts one movement to the immutable inventory ledger and updates the
  * affected location balances atomically. MUST be called inside a
  * transaction — use `withSerializableTx` for user-facing mutations.
@@ -110,6 +144,7 @@ export async function postMovement(
     const { prev, next } = await adjustBalance(tx, input.itemId, sourceId, quantity.neg(), false);
     prevSourceQty = prev;
     newSourceQty = next;
+    await maybeNotifyLowStock(tx, input.itemId, prev, next);
   }
   if (destId) {
     const { prev, next } = await adjustBalance(tx, input.itemId, destId, quantity, false);

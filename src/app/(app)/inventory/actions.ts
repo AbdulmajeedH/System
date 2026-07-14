@@ -4,8 +4,10 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { Prisma } from "@/generated/prisma/client";
+import { AttachmentEntityType } from "@/generated/prisma/enums";
 import { actionPermission } from "@/lib/auth/guards";
 import { audit } from "@/lib/services/audit";
+import { AttachmentError, saveAttachments } from "@/lib/services/attachments";
 import { categoryFormSchema, itemFormSchema } from "@/lib/validations/inventory";
 import { fieldErrorsFromZod, type FormState } from "@/lib/utils/action-state";
 import { t } from "@/lib/i18n/ar";
@@ -55,6 +57,28 @@ export async function saveItem(
             .toDecimalPlaces(4),
         },
       });
+
+  // Optional item image → durable storage, key recorded on the item.
+  const image = formData.get("image");
+  if (image instanceof File && image.size > 0) {
+    try {
+      const keys = await saveAttachments(
+        [image],
+        AttachmentEntityType.INVENTORY_ITEM,
+        item.id,
+        user.id,
+      );
+      if (keys[0]) {
+        await prisma.inventoryItem.update({
+          where: { id: item.id },
+          data: { imageKey: keys[0] },
+        });
+      }
+    } catch (error) {
+      if (error instanceof AttachmentError) return { error: error.message };
+      throw error;
+    }
+  }
 
   await audit({
     userId: user.id,

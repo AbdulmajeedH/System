@@ -6,6 +6,8 @@ import {
   ApprovalTransactionType,
   Role,
 } from "../../generated/prisma/enums";
+import { notifyRoles, notifyUser, rolesSatisfying } from "./notifications";
+import { t } from "../i18n/ar";
 
 const Decimal = Prisma.Decimal;
 
@@ -37,20 +39,8 @@ export function matchRule<T extends RuleLike>(
   return departmental.find(inBand) ?? global.find(inBand) ?? null;
 }
 
-/** Role seniority for "an equal-or-higher role may approve" checks. */
-const ROLE_RANK: Record<Role, number> = {
-  EMPLOYEE: 0,
-  DEPARTMENT_MANAGER: 1,
-  PURCHASING_OFFICER: 1,
-  WAREHOUSE_MANAGER: 1,
-  GENERAL_MANAGER: 2,
-  OWNER: 3,
-};
-
-export function roleSatisfies(actual: Role, required: Role): boolean {
-  if (actual === required) return true;
-  return ROLE_RANK[actual] > ROLE_RANK[required];
-}
+import { roleSatisfies } from "./roles";
+export { roleSatisfies };
 
 export type CreateApprovalInput = {
   transactionType: ApprovalTransactionType;
@@ -112,6 +102,15 @@ export async function createApprovalRequest(
       status: ApprovalStatus.PENDING,
     },
   });
+
+  await notifyRoles(tx, rolesSatisfying(requiredRole), {
+    type: "approval.pending",
+    title: t.notifications.titles.approvalPending,
+    entityType: input.entityType,
+    entityId: input.entityId,
+    excludeUserId: input.requestedById,
+  });
+
   return { autoApproved: false, requestId: request.id, requiredRole };
 }
 
@@ -169,5 +168,16 @@ export async function decideApproval(
       newStatus,
     },
   });
+
+  if (input.decision === ApprovalDecision.REJECTED) {
+    await notifyUser(tx, request.requestedById, {
+      type: "submission.rejected",
+      title: t.notifications.titles.rejected,
+      body: input.comment ?? null,
+      entityType: input.entityType,
+      entityId: input.entityId,
+    });
+  }
+
   return { requestId: request.id };
 }
