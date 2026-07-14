@@ -147,4 +147,23 @@ Vercel can't run Docker or keep files on disk, so you need a hosted database and
 - Department-scoped users can never read other departments' financial data (enforced in queries).
 - Financial/inventory records are soft-deleted (`isActive`/`deletedAt`), never hard-deleted.
 - File storage is behind a provider interface (`src/lib/services/storage`) — local disk is only allowed in development/test; production and Vercel require private S3-compatible storage with `STORAGE_DRIVER=s3`.
-- Attendance and (future) invoice-OCR are behind provider abstractions so Telegram/WhatsApp/QR and AI extraction can plug in during Phase 2/3.
+- Attendance is behind a provider abstraction so Telegram/WhatsApp/QR can plug in during a later phase.
+
+## AI invoice extraction
+
+The new-invoice form can pre-fill items, quantities, unit prices and VAT from a
+photo or PDF of a supplier invoice, using Claude vision. Extraction is behind a
+replaceable provider interface (`src/lib/services/invoice-extraction/`):
+
+- With `ANTHROPIC_API_KEY` set, the `ClaudeInvoiceExtractionProvider` reads the
+  image server-side and returns structured data. The key is used only on the
+  server and is never sent to the browser.
+- Without a key, a deterministic mock provider is used so the flow works in
+  development without credentials.
+
+Extraction **never** creates an invoice or touches inventory. The result is only
+pre-filled into the form; extracted item names are fuzzy-matched to inventory
+items as suggestions, and a human must review, correct, and confirm every field
+before saving through the normal approval flow. Each extraction is audited
+(`invoice.ai_extract`). On Vercel, add `ANTHROPIC_API_KEY` as an environment
+variable (server-side).
