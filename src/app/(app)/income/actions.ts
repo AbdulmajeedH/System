@@ -4,7 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma, withSerializableTx } from "@/lib/db";
 import { Prisma } from "@/generated/prisma/client";
-import { AttachmentEntityType, SubmissionStatus } from "@/generated/prisma/enums";
+import { AttachmentEntityType, Role, SubmissionStatus } from "@/generated/prisma/enums";
+import { notifyRoles } from "@/lib/services/notifications";
 import { actionPermission } from "@/lib/auth/guards";
 import { canAccessDepartment } from "@/lib/auth/permissions";
 import { audit } from "@/lib/services/audit";
@@ -141,6 +142,17 @@ export async function saveIncome(
       return { error: error.message };
     }
     throw error;
+  }
+
+  if (!options.asDraft && !totals.cashDifference.isZero()) {
+    await notifyRoles(prisma, [Role.GENERAL_MANAGER, Role.OWNER], {
+      type: "income.cash_difference",
+      title: t.notifications.titles.cashDifference,
+      body: `${totals.cashDifference.toString()} ${t.app.currency}`,
+      entityType: "DailyIncomeSubmission",
+      entityId: savedId,
+      excludeUserId: user.id,
+    });
   }
 
   await audit({
