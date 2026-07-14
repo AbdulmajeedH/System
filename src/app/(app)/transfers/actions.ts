@@ -11,6 +11,7 @@ import { can } from "@/lib/auth/permissions";
 import { audit } from "@/lib/services/audit";
 import { InsufficientStockError, postMovement } from "@/lib/services/inventory";
 import { AttachmentError, saveAttachments } from "@/lib/services/attachments";
+import { notifyRoles } from "@/lib/services/notifications";
 import { unknownError, type FormState } from "@/lib/utils/action-state";
 import { t } from "@/lib/i18n/ar";
 
@@ -108,6 +109,26 @@ export async function createStandaloneTransfer(
   } catch (error) {
     if (error instanceof AttachmentError) return { error: error.message };
     throw error;
+  }
+
+  // Tell the receiving side a transfer awaits their confirmation.
+  if (to.code === "MAIN_WAREHOUSE" || to.departmentId === null) {
+    await notifyRoles(prisma, [Role.WAREHOUSE_MANAGER, Role.OWNER], {
+      type: "transfer.awaiting",
+      title: t.notifications.titles.transferAwaiting,
+      entityType: "StockTransfer",
+      entityId: transfer.id,
+      excludeUserId: user.id,
+    });
+  } else {
+    await notifyRoles(prisma, [Role.DEPARTMENT_MANAGER], {
+      type: "transfer.awaiting",
+      title: t.notifications.titles.transferAwaiting,
+      entityType: "StockTransfer",
+      entityId: transfer.id,
+      departmentId: to.departmentId,
+      excludeUserId: user.id,
+    });
   }
 
   await audit({

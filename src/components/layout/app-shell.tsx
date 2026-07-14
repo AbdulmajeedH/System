@@ -1,5 +1,6 @@
+import Link from "next/link";
 import type { ReactNode } from "react";
-import { LogOut, UtensilsCrossed } from "lucide-react";
+import { Bell, LogOut, UtensilsCrossed } from "lucide-react";
 import { t } from "@/lib/i18n/ar";
 import type { SessionUser } from "@/lib/auth/session";
 import { logout } from "@/lib/auth/auth-actions";
@@ -25,7 +26,32 @@ function UserBadge({ user }: { user: SessionUser }) {
   );
 }
 
-export function AppShell({ user, children }: { user: SessionUser; children: ReactNode }) {
+function NotificationBell({ unreadCount }: { unreadCount: number }) {
+  return (
+    <Link
+      href="/notifications"
+      aria-label={t.notifications.title}
+      className="relative flex size-9 items-center justify-center rounded-lg text-muted transition-colors duration-150 hover:bg-background hover:text-foreground"
+    >
+      <Bell className="size-5" strokeWidth={1.8} />
+      {unreadCount > 0 ? (
+        <span className="absolute -top-0.5 -end-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-danger px-1 text-[10px] font-bold text-white dir-ltr">
+          {unreadCount > 99 ? "99+" : unreadCount}
+        </span>
+      ) : null}
+    </Link>
+  );
+}
+
+export function AppShell({
+  user,
+  unreadCount,
+  children,
+}: {
+  user: SessionUser;
+  unreadCount: number;
+  children: ReactNode;
+}) {
   const items = navItemsFor(user);
   const mobileItems = items.slice(0, MOBILE_NAV_COUNT);
   const hasMore = items.length > MOBILE_NAV_COUNT;
@@ -38,7 +64,8 @@ export function AppShell({ user, children }: { user: SessionUser; children: Reac
           <span className="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
             <UtensilsCrossed className="size-5" strokeWidth={2} />
           </span>
-          <p className="font-bold">{t.app.name}</p>
+          <p className="font-bold flex-1">{t.app.name}</p>
+          <NotificationBell unreadCount={unreadCount} />
         </div>
         <nav className="flex-1 overflow-y-auto p-3 space-y-0.5">
           {items.map((item) => (
@@ -62,14 +89,17 @@ export function AppShell({ user, children }: { user: SessionUser; children: Reac
         {/* Mobile header */}
         <header className="md:hidden sticky top-0 z-20 flex items-center justify-between gap-2 border-b border-border bg-card/95 backdrop-blur px-4 py-3">
           <UserBadge user={user} />
-          <form action={logout}>
-            <button
-              aria-label={t.nav.logout}
-              className="flex size-9 items-center justify-center rounded-lg text-danger transition-colors duration-150 hover:bg-danger-soft"
-            >
-              <LogOut className="size-5" strokeWidth={1.8} />
-            </button>
-          </form>
+          <div className="flex items-center gap-1">
+            <NotificationBell unreadCount={unreadCount} />
+            <form action={logout}>
+              <button
+                aria-label={t.nav.logout}
+                className="flex size-9 items-center justify-center rounded-lg text-danger transition-colors duration-150 hover:bg-danger-soft"
+              >
+                <LogOut className="size-5" strokeWidth={1.8} />
+              </button>
+            </form>
+          </div>
         </header>
 
         <main className="flex-1 p-4 sm:p-6 pb-24 md:pb-6 max-w-6xl w-full mx-auto">

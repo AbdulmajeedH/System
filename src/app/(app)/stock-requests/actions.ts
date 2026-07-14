@@ -7,9 +7,11 @@ import { Prisma } from "@/generated/prisma/client";
 import {
   AttachmentEntityType,
   MovementType,
+  Role,
   StockRequestStatus,
 } from "@/generated/prisma/enums";
 import { AttachmentError, saveAttachments } from "@/lib/services/attachments";
+import { notifyRoles } from "@/lib/services/notifications";
 import { actionPermission } from "@/lib/auth/guards";
 import { canAccessDepartment } from "@/lib/auth/permissions";
 import { audit } from "@/lib/services/audit";
@@ -77,6 +79,14 @@ export async function createStockRequest(_prev: FormState, formData: FormData): 
         })),
       },
     },
+  });
+
+  await notifyRoles(prisma, [Role.WAREHOUSE_MANAGER, Role.OWNER], {
+    type: "stock.request_new",
+    title: t.notifications.titles.requestNew,
+    entityType: "StockRequest",
+    entityId: request.id,
+    excludeUserId: user.id,
   });
 
   await audit({
@@ -217,6 +227,22 @@ export async function advanceStockRequest(
     });
   } catch {
     return unknownError();
+  }
+
+  if (stage === "READY" || stage === "DELIVERED") {
+    const request = await prisma.stockRequest.findUnique({
+      where: { id: requestId },
+      select: { departmentId: true },
+    });
+    if (request) {
+      await notifyRoles(prisma, [Role.DEPARTMENT_MANAGER], {
+        type: "stock.request_ready",
+        title: t.notifications.titles.requestReady,
+        entityType: "StockRequest",
+        entityId: requestId,
+        departmentId: request.departmentId,
+      });
+    }
   }
 
   await audit({

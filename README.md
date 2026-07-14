@@ -25,8 +25,13 @@ Internal business management web application for a restaurant, café, and mini-m
 | Stock counts | Count sheets with system snapshot, difference values, threshold-routed approval, adjustment posting |
 | Damage/waste/expiry | Photo evidence, estimated cost, approvals, ledger write-off |
 | Attendance | Check-in/out and breaks with a state machine, warnings, manager report |
-| Approvals | Configurable rule engine (type + amount band + department + role) with unified inbox |
+| Approvals | Configurable rule engine (type + amount band + department + role) with unified inbox and rule management UI |
 | Dashboard | Role-scoped stats, 14-day income trend, income by department |
+| Reports | 15 filterable live reports with Excel-compatible CSV export |
+| Notifications | In-app notification center with unread badge, preferences, and event triggers (approvals, rejections, low stock, request lifecycle, cash differences) |
+| Settings | General settings, approval rules, expense categories, important products, units/conversions |
+| Adjustments & transfers | Controlled opening balances / manual adjustments with approval, standalone transfers, returns to warehouse, supplier returns |
+| Password reset | Hashed single-use expiring tokens, no user enumeration, replaceable email provider (console logger until a real provider is configured) |
 | Audit log | Every sensitive action recorded; viewer for the owner |
 
 ## Local setup
@@ -126,6 +131,7 @@ Vercel can't run Docker or keep files on disk, so you need a hosted database and
    | `DATABASE_URL` | the Neon **pooled** connection string (used by the running app) |
    | `DIRECT_DATABASE_URL` | the Neon **direct/unpooled** connection string (used by `migrate deploy` during the build) |
    | `AUTH_SECRET` | output of `openssl rand -hex 32` |
+   | `APP_URL` | your production URL (used in password-reset links) |
    | `STORAGE_DRIVER` | `s3` |
    | `S3_BUCKET` / `S3_REGION` / `S3_ENDPOINT` / `S3_ACCESS_KEY_ID` / `S3_SECRET_ACCESS_KEY` | from step 2 (`S3_REGION=auto` and set `S3_ENDPOINT` for R2; omit `S3_ENDPOINT` for AWS) |
 5. **Initialize the database once** — no terminal needed: open the Neon console → **SQL Editor**, paste the full contents of [`prisma/production-setup.sql`](prisma/production-setup.sql) (schema + seed data, generated from a verified database), and click **Run**. Must be run against an **empty** database.
