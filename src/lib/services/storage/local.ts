@@ -1,15 +1,16 @@
 import { mkdir, readFile, unlink, writeFile } from "fs/promises";
 import path from "path";
-import type { StorageProvider, StoredFile } from "./index";
+import { assertSafeStorageKey, type StorageProvider, type StoredFile } from "./index";
 
 export class LocalStorageProvider implements StorageProvider {
   private readonly root: string;
 
   constructor(dir: string) {
-    this.root = path.resolve(process.cwd(), dir);
+    this.root = path.resolve(/*turbopackIgnore: true*/ process.cwd(), dir);
   }
 
   private resolve(key: string): string {
+    assertSafeStorageKey(key);
     const full = path.resolve(this.root, key);
     if (!full.startsWith(this.root + path.sep)) {
       throw new Error("Invalid storage key");
@@ -17,10 +18,10 @@ export class LocalStorageProvider implements StorageProvider {
     return full;
   }
 
-  async put(key: string, buffer: Buffer, _contentType: string): Promise<void> {
+  async put(key: string, buffer: Buffer): Promise<void> {
     const full = this.resolve(key);
     await mkdir(path.dirname(full), { recursive: true });
-    await writeFile(full, buffer);
+    await writeFile(full, buffer, { flag: "wx" });
   }
 
   async get(key: string): Promise<StoredFile | null> {
