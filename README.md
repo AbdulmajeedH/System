@@ -133,7 +133,7 @@ Vercel can't run Docker or keep files on disk, so you need a hosted database and
    | `AUTH_SECRET` | output of `openssl rand -hex 32` |
    | `APP_URL` | your production URL (used in password-reset links) |
    | `STORAGE_DRIVER` | `s3` |
-   | `S3_BUCKET` / `S3_REGION` / `S3_ENDPOINT` / `S3_ACCESS_KEY_ID` / `S3_SECRET_ACCESS_KEY` | from step 2 (`S3_REGION=auto` and set `S3_ENDPOINT` for R2; omit `S3_ENDPOINT` for AWS) |
+   | `S3_BUCKET` / `S3_REGION` / `S3_ENDPOINT` / `S3_ACCESS_KEY_ID` / `S3_SECRET_ACCESS_KEY` | from step 2 (`S3_REGION=auto` for R2-compatible providers; set `S3_ENDPOINT` to the provider endpoint. For AWS S3, set the regional endpoint such as `https://s3.us-east-1.amazonaws.com`.) |
 5. **Initialize the database once** — no terminal needed: open the Neon console → **SQL Editor**, paste the full contents of [`prisma/production-setup.sql`](prisma/production-setup.sql) (schema + seed data, generated from a verified database), and click **Run**. Must be run against an **empty** database.
    - Terminal alternative: `DATABASE_URL="<direct-string>" npx prisma migrate deploy && DATABASE_URL="<direct-string>" npx prisma db seed`
    - For **future schema changes**, run `npx prisma migrate deploy` against the direct URL (the Vercel build intentionally skips migrations).
@@ -146,5 +146,5 @@ Vercel can't run Docker or keep files on disk, so you need a hosted database and
 - Every sensitive mutation writes an `AuditLog` entry.
 - Department-scoped users can never read other departments' financial data (enforced in queries).
 - Financial/inventory records are soft-deleted (`isActive`/`deletedAt`), never hard-deleted.
-- File storage is behind a provider interface (`src/lib/services/storage`) — local disk in dev, S3-compatible adapter slot for production.
+- File storage is behind a provider interface (`src/lib/services/storage`) — local disk is only allowed in development/test; production and Vercel require private S3-compatible storage with `STORAGE_DRIVER=s3`.
 - Attendance and (future) invoice-OCR are behind provider abstractions so Telegram/WhatsApp/QR and AI extraction can plug in during Phase 2/3.

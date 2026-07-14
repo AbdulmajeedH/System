@@ -10,6 +10,20 @@ import {
 } from "./storage/attachment-rules";
 import type { AttachmentEntityType } from "@/generated/prisma/enums";
 
+const MAX_FILE_BYTES = 10 * 1024 * 1024; // 10 MB
+const ALLOWED_TYPES: Record<string, string[]> = {
+  "image/jpeg": [".jpg", ".jpeg"],
+  "image/png": [".png"],
+  "image/webp": [".webp"],
+  "application/pdf": [".pdf"],
+};
+const STORED_EXTENSIONS: Record<string, string> = {
+  "image/jpeg": ".jpg",
+  "image/png": ".png",
+  "image/webp": ".webp",
+  "application/pdf": ".pdf",
+};
+
 export class AttachmentError extends Error {
   constructor(message: string) {
     super(message);
@@ -17,13 +31,48 @@ export class AttachmentError extends Error {
   }
 }
 
+export function sanitizedFileName(name: string, fallbackExt: string): string {
+  const base = path.basename(name || `attachment${fallbackExt}`).replace(/[\u0000-\u001f]/g, "");
+  const safe = base.replace(/[/\\]/g, "").trim();
+  return safe.length > 0 ? safe.slice(0, 180) : `attachment${fallbackExt}`;
+}
+
+export function extensionForUpload(file: File): string {
+  const allowed = ALLOWED_TYPES[file.type];
+  if (!allowed) {
+    throw new AttachmentError("نوع الملف غير مدعوم (المسموح: صور أو PDF)");
+  }
+  const ext = path.extname(file.name || "").toLowerCase();
+  if (ext && !allowed.includes(ext)) {
+    throw new AttachmentError("امتداد الملف لا يطابق نوع الملف");
+  }
+  return STORED_EXTENSIONS[file.type];
+}
+
+export function validateAttachmentFile(file: File): string {
+  if (!file || file.size === 0) throw new AttachmentError("الملف فارغ");
+  if (file.size > MAX_FILE_BYTES) {
+    throw new AttachmentError("حجم الملف يتجاوز الحد المسموح (١٠ ميجابايت)");
+  }
+  return extensionForUpload(file);
+}
+
+export function generateAttachmentKey(entityType: AttachmentEntityType, ext: string, now = new Date()): string {
+  return path.posix.join(
+    entityType.toLowerCase(),
+    String(now.getFullYear()),
+    String(now.getMonth() + 1).padStart(2, "0"),
+    `${randomBytes(16).toString("hex")}${ext}`,
+  );
+}
+
 /**
  * Validates and stores files from a form, then records FileAttachment rows.
  * Call AFTER the entity exists. Skips empty file inputs silently.
  *
- * Orphan safety: the object is written first and the DB row second; if the
- * row cannot be created, the stored object is deleted again so neither an
- * orphan record nor an orphan object survives.
+ * The storage object is written before the DB row because the DB references
+ * the generated object key. If a DB insert or later upload fails, this helper
+ * deletes any objects and DB rows it created in this call to avoid orphans.
  */
 export async function saveAttachments(
   files: File[],
@@ -32,46 +81,41 @@ export async function saveAttachments(
   uploadedById: string,
 ): Promise<string[]> {
   const storage = getStorage();
-  const savedKeys: string[] = [];
+  const createdKeys: string[] = [];
+  const createdAttachmentIds: string[] = [];
+  let saved = 0;
 
-  for (const file of files) {
-    if (!file || file.size === 0) continue;
-    const ext = extensionFor(file.type);
-    if (!ext || !isAcceptableUpload(file.type, file.name ?? "", file.size)) {
-      throw new AttachmentError(
-        "الملف غير مقبول: المسموح صور JPEG/PNG/WebP أو PDF بحجم أقصاه ١٠ ميجابايت",
-      );
-    }
+  try {
+    for (const file of files) {
+      if (!file || file.size === 0) continue;
+      const ext = validateAttachmentFile(file);
+      const key = generateAttachmentKey(entityType, ext);
+      const buffer = Buffer.from(await file.arrayBuffer());
 
-    const now = new Date();
-    const key = path.posix.join(
-      entityType.toLowerCase(),
-      String(now.getFullYear()),
-      String(now.getMonth() + 1).padStart(2, "0"),
-      `${randomBytes(12).toString("hex")}${ext}`,
-    );
-    if (!isSafeStorageKey(key)) throw new AttachmentError("مفتاح تخزين غير صالح");
+      await storage.put(key, buffer, file.type);
+      createdKeys.push(key);
 
-    const buffer = Buffer.from(await file.arrayBuffer());
-    await storage.put(key, buffer, file.type);
-    try {
-      await prisma.fileAttachment.create({
+      const attachment = await prisma.fileAttachment.create({
         data: {
           entityType,
           entityId,
           storageKey: key,
-          fileName: file.name || `attachment${ext}`,
+          fileName: sanitizedFileName(file.name, ext),
           mimeType: file.type,
           size: file.size,
           uploadedById,
         },
+        select: { id: true },
       });
-    } catch (error) {
-      // Roll the object back so storage and DB stay consistent.
-      await storage.delete(key).catch(() => {});
-      throw error;
+      createdAttachmentIds.push(attachment.id);
+      saved++;
     }
-    savedKeys.push(key);
+    return saved;
+  } catch (error) {
+    await Promise.allSettled(createdKeys.map((key) => storage.delete(key)));
+    if (createdAttachmentIds.length > 0) {
+      await prisma.fileAttachment.deleteMany({ where: { id: { in: createdAttachmentIds } } });
+    }
+    throw error;
   }
-  return savedKeys;
 }

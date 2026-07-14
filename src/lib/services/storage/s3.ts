@@ -4,54 +4,50 @@ import {
   PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
-import type { StorageProvider, StoredFile } from "./index";
+import {
+  assertSafeStorageKey,
+  type S3StorageConfig,
+  type StorageProvider,
+  type StoredFile,
+} from "./index";
 
 /**
  * S3-compatible object storage (AWS S3, Cloudflare R2, Supabase Storage,
  * MinIO, …). Objects stay private — the app serves them through the
  * authenticated /api/files route, never by public URL.
- *
- * Required env: S3_BUCKET, S3_REGION (or "auto" for R2), S3_ACCESS_KEY_ID,
- * S3_SECRET_ACCESS_KEY. Optional: S3_ENDPOINT for non-AWS providers.
  */
 export class S3StorageProvider implements StorageProvider {
   private readonly client: S3Client;
   private readonly bucket: string;
 
-  constructor(env: Record<string, string | undefined> = process.env) {
-    const missing = ["S3_BUCKET", "S3_ACCESS_KEY_ID", "S3_SECRET_ACCESS_KEY"].filter(
-      (key) => !env[key]?.trim(),
-    );
-    if (missing.length > 0) {
-      throw new Error(
-        `S3 storage configuration is incomplete — missing: ${missing.join(", ")}. ` +
-          "Set every required variable (S3_BUCKET, S3_REGION, S3_ACCESS_KEY_ID, " +
-          "S3_SECRET_ACCESS_KEY, and S3_ENDPOINT for non-AWS providers).",
-      );
-    }
-    this.bucket = env.S3_BUCKET!;
+  constructor(config: S3StorageConfig) {
+    this.bucket = config.bucket;
     this.client = new S3Client({
-      region: env.S3_REGION?.trim() || "auto",
-      endpoint: env.S3_ENDPOINT?.trim() || undefined,
+      region: config.region,
+      endpoint: config.endpoint,
+      forcePathStyle: true,
       credentials: {
-        accessKeyId: env.S3_ACCESS_KEY_ID!,
-        secretAccessKey: env.S3_SECRET_ACCESS_KEY!,
+        accessKeyId: config.accessKeyId,
+        secretAccessKey: config.secretAccessKey,
       },
     });
   }
 
   async put(key: string, buffer: Buffer, contentType: string): Promise<void> {
+    assertSafeStorageKey(key);
     await this.client.send(
       new PutObjectCommand({
         Bucket: this.bucket,
         Key: key,
         Body: buffer,
         ContentType: contentType,
+        Metadata: { private: "true" },
       }),
     );
   }
 
   async get(key: string): Promise<StoredFile | null> {
+    assertSafeStorageKey(key);
     try {
       const result = await this.client.send(
         new GetObjectCommand({ Bucket: this.bucket, Key: key }),
@@ -60,12 +56,16 @@ export class S3StorageProvider implements StorageProvider {
       const buffer = Buffer.from(await result.Body.transformToByteArray());
       return { buffer, contentType: result.ContentType ?? "" };
     } catch (error) {
-      if ((error as { name?: string }).name === "NoSuchKey") return null;
+      const name = (error as { name?: string; $metadata?: { httpStatusCode?: number } }).name;
+      const status = (error as { $metadata?: { httpStatusCode?: number } }).$metadata
+        ?.httpStatusCode;
+      if (name === "NoSuchKey" || name === "NotFound" || status === 404) return null;
       throw error;
     }
   }
 
   async delete(key: string): Promise<void> {
+    assertSafeStorageKey(key);
     await this.client.send(new DeleteObjectCommand({ Bucket: this.bucket, Key: key }));
   }
 }

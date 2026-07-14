@@ -1,63 +1,97 @@
-import { describe, expect, it } from "vitest";
-import { S3StorageProvider } from "../../src/lib/services/storage/s3";
+import { afterEach, describe, expect, it, vi } from "vitest";
+
+vi.mock("server-only", () => ({}));
+import { AttachmentEntityType } from "../../src/generated/prisma/enums";
 import {
-  isAcceptableUpload,
-  isSafeStorageKey,
-  MAX_FILE_BYTES,
-} from "../../src/lib/services/storage/attachment-rules";
+  assertSafeStorageKey,
+  getS3StorageConfig,
+  getStorageDriver,
+  resetStorageForTests,
+  StorageConfigError,
+} from "../../src/lib/services/storage";
+import {
+  extensionForUpload,
+  generateAttachmentKey,
+  sanitizedFileName,
+  validateAttachmentFile,
+} from "../../src/lib/services/attachments";
 
-describe("S3 configuration validation", () => {
-  const full = {
-    S3_BUCKET: "bucket",
-    S3_REGION: "auto",
-    S3_ACCESS_KEY_ID: "key",
-    S3_SECRET_ACCESS_KEY: "secret",
-  };
+const ORIGINAL_ENV = { ...process.env };
 
-  it("accepts a complete configuration", () => {
-    expect(() => new S3StorageProvider(full)).not.toThrow();
+afterEach(() => {
+  vi.unstubAllEnvs();
+  process.env = { ...ORIGINAL_ENV };
+  resetStorageForTests();
+});
+
+describe("storage configuration", () => {
+  it("requires S3 storage in production when no driver is configured", () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("STORAGE_DRIVER", "");
+    expect(() => getStorageDriver()).toThrow(StorageConfigError);
+    expect(() => getStorageDriver()).toThrow(/STORAGE_DRIVER=s3/);
   });
 
-  it("lists every missing variable in the error", () => {
-    expect(() => new S3StorageProvider({ S3_BUCKET: "b" })).toThrow(
-      /S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY/,
-    );
-    expect(() => new S3StorageProvider({})).toThrow(/S3_BUCKET/);
+  it("allows local storage outside production but rejects it in production", () => {
+    vi.stubEnv("NODE_ENV", "development");
+    vi.stubEnv("STORAGE_DRIVER", "");
+    expect(getStorageDriver()).toBe("local");
+
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("STORAGE_DRIVER", "local");
+    expect(() => getStorageDriver()).toThrow(/not allowed in production/);
   });
 
-  it("rejects blank values, not only missing ones", () => {
-    expect(() => new S3StorageProvider({ ...full, S3_SECRET_ACCESS_KEY: "  " })).toThrow(
-      /S3_SECRET_ACCESS_KEY/,
-    );
+  it("validates all S3 environment variables", () => {
+    vi.stubEnv("STORAGE_DRIVER", "s3");
+    vi.stubEnv("S3_BUCKET", "bucket");
+    vi.stubEnv("S3_REGION", "auto");
+    vi.stubEnv("S3_ACCESS_KEY_ID", "access");
+    vi.stubEnv("S3_SECRET_ACCESS_KEY", "secret");
+    vi.stubEnv("S3_ENDPOINT", "https://example.test");
+
+    expect(getS3StorageConfig()).toEqual({
+      bucket: "bucket",
+      region: "auto",
+      accessKeyId: "access",
+      secretAccessKey: "secret",
+      endpoint: "https://example.test",
+    });
+
+    vi.stubEnv("S3_SECRET_ACCESS_KEY", "");
+    expect(() => getS3StorageConfig()).toThrow(/S3_SECRET_ACCESS_KEY/);
+  });
+
+  it("rejects unsafe object keys", () => {
+    expect(() => assertSafeStorageKey("daily_income/2026/07/file.pdf")).not.toThrow();
+    expect(() => assertSafeStorageKey("../file.pdf")).toThrow(StorageConfigError);
+    expect(() => assertSafeStorageKey("daily_income//file.pdf")).toThrow(StorageConfigError);
+    expect(() => assertSafeStorageKey("daily_income\\file.pdf")).toThrow(StorageConfigError);
+    expect(() => assertSafeStorageKey("/daily_income/file.pdf")).toThrow(StorageConfigError);
   });
 });
 
-describe("upload validation", () => {
-  it("accepts supported types with matching extensions", () => {
-    expect(isAcceptableUpload("image/jpeg", "photo.JPG", 1000)).toBe(true);
-    expect(isAcceptableUpload("image/jpeg", "photo.jpeg", 1000)).toBe(true);
-    expect(isAcceptableUpload("application/pdf", "فاتورة.pdf", 1000)).toBe(true);
-    expect(isAcceptableUpload("image/webp", "capture", 1000)).toBe(true); // camera, no ext
+describe("attachment validation", () => {
+  it("accepts supported MIME types with matching extensions", () => {
+    const file = new File(["data"], "receipt.pdf", { type: "application/pdf" });
+    expect(validateAttachmentFile(file)).toBe(".pdf");
   });
 
-  it("rejects unsupported types, mismatched extensions, and oversize files", () => {
-    expect(isAcceptableUpload("application/x-msdownload", "app.exe", 10)).toBe(false);
-    expect(isAcceptableUpload("image/png", "script.exe", 10)).toBe(false);
-    expect(isAcceptableUpload("image/png", "a.png", MAX_FILE_BYTES + 1)).toBe(false);
-    expect(isAcceptableUpload("image/png", "a.png", 0)).toBe(false);
-  });
-});
+  it("rejects mismatched extensions and unsupported MIME types", () => {
+    const mismatch = new File(["data"], "receipt.exe", { type: "application/pdf" });
+    expect(() => extensionForUpload(mismatch)).toThrow(/امتداد/);
 
-describe("storage key safety", () => {
-  it("accepts generated keys", () => {
-    expect(isSafeStorageKey("expense/2026/07/abc123def456.jpg")).toBe(true);
+    const unsupported = new File(["data"], "receipt.txt", { type: "text/plain" });
+    expect(() => validateAttachmentFile(unsupported)).toThrow(/غير مدعوم/);
   });
 
-  it("rejects traversal, absolute paths, and junk", () => {
-    expect(isSafeStorageKey("../../etc/passwd")).toBe(false);
-    expect(isSafeStorageKey("/etc/passwd")).toBe(false);
-    expect(isSafeStorageKey("a\\..\\b")).toBe(false);
-    expect(isSafeStorageKey("a b?.png")).toBe(false);
-    expect(isSafeStorageKey("")).toBe(false);
+  it("generates safe unique object keys and sanitizes original file names", () => {
+    const key = generateAttachmentKey(
+      AttachmentEntityType.EXPENSE,
+      ".pdf",
+      new Date("2026-07-14T00:00:00.000Z"),
+    );
+    expect(key).toMatch(/^expense\/2026\/07\/[a-f0-9]{32}\.pdf$/);
+    expect(sanitizedFileName("../../receipt.pdf", ".pdf")).toBe("receipt.pdf");
   });
 });
