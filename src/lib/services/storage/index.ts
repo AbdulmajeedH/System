@@ -35,13 +35,6 @@ export interface StorageProvider {
   delete(key: string): Promise<void>;
 }
 
-export class StorageConfigError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "StorageConfigError";
-  }
-}
-
 let provider: StorageProvider | null = null;
 
 function isProductionRuntime(): boolean {
@@ -112,22 +105,5 @@ export function getStorage(): StorageProvider {
         ? new S3StorageProvider(getS3StorageConfig())
         : new LocalStorageProvider(process.env.STORAGE_DIR || "uploads");
   }
-
-  // The Vercel/serverless filesystem is ephemeral — local storage there
-  // would silently lose every uploaded file after redeploy.
-  if (process.env.NODE_ENV === "production" && process.env.VERCEL) {
-    throw new StorageConfigError(
-      "Production on Vercel requires STORAGE_DRIVER=s3 with S3_BUCKET, " +
-        "S3_ACCESS_KEY_ID and S3_SECRET_ACCESS_KEY configured. Local file " +
-        "storage is only supported for local development.",
-    );
-  }
-
-  provider = new LocalStorageProvider(process.env.STORAGE_DIR || "uploads");
   return provider;
-}
-
-/** Test hook: reset the cached provider so env changes take effect. */
-export function resetStorageForTests(): void {
-  provider = null;
 }
