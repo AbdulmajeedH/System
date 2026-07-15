@@ -494,6 +494,13 @@ export const ar = {
     awaitingApproval: "بانتظار الاعتماد",
     noItems: "لا توجد أصناف في هذا الموقع",
     countReason: "سبب الفرق",
+    searchItems: "ابحث باسم الصنف أو الرمز",
+    allCategories: "كل التصنيفات",
+    showingCount: "عرض {shown} من {total} صنف",
+    onlyCounted: "المُدخلة فقط",
+    noMatch: "لا توجد أصناف مطابقة للبحث",
+    uncategorized: "بدون تصنيف",
+    clearFilters: "مسح التصفية",
   },
   damages: {
     title: "التوالف",

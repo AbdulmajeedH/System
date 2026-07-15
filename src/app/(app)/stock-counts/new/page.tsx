@@ -18,8 +18,8 @@ export default async function NewStockCountPage() {
 
   const items = await prisma.inventoryItem.findMany({
     where: { isActive: true },
-    include: { baseUnit: true, balances: true },
-    orderBy: { nameAr: "asc" },
+    include: { baseUnit: true, balances: true, category: { select: { nameAr: true } } },
+    orderBy: [{ category: { nameAr: "asc" } }, { nameAr: "asc" }],
   });
 
   // Count sheet per location: every active item with its current system qty.
@@ -32,6 +32,7 @@ export default async function NewStockCountPage() {
         nameAr: item.nameAr,
         sku: item.sku,
         unitName: item.baseUnit.nameAr,
+        categoryName: item.category?.nameAr ?? null,
         systemQty: balance?.quantity.toString() ?? "0",
         averageCost: item.averageCost.toString(),
       };
