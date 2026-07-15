@@ -16,6 +16,10 @@ import "dotenv/config";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { IMPORT_CATEGORIES, IMPORT_ITEMS } from "./warehouse-import-data";
+import { MINIMARKET_CATEGORIES, MINIMARKET_ITEMS } from "./minimarket-import-data";
+
+const ALL_CATEGORIES = [...IMPORT_CATEGORIES, ...MINIMARKET_CATEGORIES];
+const ALL_ITEMS = [...IMPORT_ITEMS, ...MINIMARKET_ITEMS];
 
 const connectionString = process.env.DIRECT_DATABASE_URL ?? process.env.DATABASE_URL;
 if (!connectionString) {
@@ -38,7 +42,7 @@ async function main() {
 
   // Ensure each top-level category exists (idempotent by name).
   const categoryId = new Map<string, string>();
-  for (const nameAr of IMPORT_CATEGORIES) {
+  for (const nameAr of ALL_CATEGORIES) {
     const existing = await prisma.inventoryCategory.findFirst({
       where: { nameAr, parentId: null },
       select: { id: true },
@@ -51,7 +55,7 @@ async function main() {
   let created = 0;
   const skipped: string[] = [];
 
-  for (const item of IMPORT_ITEMS) {
+  for (const item of ALL_ITEMS) {
     const clash = await prisma.inventoryItem.findFirst({
       where: { OR: [{ sku: item.sku }, { nameAr: item.nameAr }] },
       select: { id: true },
@@ -79,7 +83,7 @@ async function main() {
     created += 1;
   }
 
-  console.log(`Categories ensured: ${IMPORT_CATEGORIES.length}`);
+  console.log(`Categories ensured: ${ALL_CATEGORIES.length}`);
   console.log(`Items created:      ${created}`);
   console.log(`Items skipped:      ${skipped.length} (already existed)`);
   if (skipped.length) console.log("  skipped:", skipped.join("، "));
